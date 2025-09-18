@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <title>Cloud Mining Oyun (Ayarlanabilir Kazanç Oranı)</title>
+  <style>
+    body { margin:0; overflow:hidden; background:black; display:flex; justify-content:center; align-items:center; height:100vh; flex-direction:column; }
+    canvas { background:black; border:4px solid #555; box-shadow:0 0 20px rgba(255,255,255,0.2); }
+    #ui { position:absolute; top:12px; left:50%; transform:translateX(-50%); color:white; font-family:sans-serif; font-size:20px; }
+    #kazimPanel { position:absolute; top:12px; right:12px; background:#111; color:white; padding:10px 15px; border:2px solid #555; border-radius:10px; font-family:sans-serif; font-size:16px; }
+    #resetBtn { position:absolute; bottom:18px; right:18px; padding:10px 16px; background:#660000; color:white; border:none; border-radius:8px; cursor:pointer; }
+    #resetBtn:hover { background:#990000; }
+  </style>
+</head>
+<body>
+  <div id="ui">Cloud Mining Oyunu</div>
+  <div id="kazimPanel">
+    Kazım Gücü: <span id="kazimGucu">0.0000000000</span><br>
+    Mevcut Kazım: <span id="mevcutKazim">0.00000000000</span>
+  </div>
+  <button id="resetBtn">Sıfırla</button>
+  <canvas id="gameCanvas"></canvas>
+
+  <script>
+    // 🔑 AYAR PARAMETRESİ
+    const KAZANC_ORANI = 100; 
+    // 100 = %1 kazanç
+    // 50  = %2 kazanç
+    // 20  = %5 kazanç
+    // 10  = %10 kazanç
+
+    const canvas = document.getElementById("gameCanvas");
+    const ctx = canvas.getContext("2d");
+    canvas.width = 800;
+    canvas.height = 600;
+
+    const kazimGucuEl = document.getElementById("kazimGucu");
+    const mevcutKazimEl = document.getElementById("mevcutKazim");
+    const resetBtn = document.getElementById("resetBtn");
+
+    // --- localStorage yükleme ---
+    const storedKaz = localStorage.getItem("kazimGucu");
+    const storedMined = localStorage.getItem("mevcutKazim");
+    const storedLast = localStorage.getItem("lastUpdateMs");
+
+    let kazimGucu = 0;
+    let mevcutKazim = 0;
+    let lastUpdateMs = Date.now();
+
+    if (storedKaz === null && storedMined === null) {
+      kazimGucu = 0;
+      mevcutKazim = 0;
+      lastUpdateMs = Date.now();
+    } else {
+      kazimGucu = parseFloat(storedKaz) || 0;
+      mevcutKazim = parseFloat(storedMined) || 0;
+      lastUpdateMs = storedLast ? parseInt(storedLast) : Date.now();
+      const elapsedMs = Math.max(0, Date.now() - lastUpdateMs);
+      if (elapsedMs > 0 && kazimGucu > 0) {
+        // offline kazım (oranlı)
+        mevcutKazim += (kazimGucu / KAZANC_ORANI) * (elapsedMs / 1000);
+      }
+    }
+
+    // --- görseller ---
+    const images = { stone: new Image(), silver: new Image(), gold: new Image(), red: new Image() };
+    images.stone.src = "stone.png";
+    images.silver.src = "silver.png";
+    images.gold.src = "gold.png";
+    images.red.src = "red.png";
+
+    // --- oyun değişkenleri ---
+    let rocks = [];
+    let particles = [];
+    let fallSpeed = 2;
+    let spawnInterval = 1500;
+    let lastSpawn = 0;
+    let normalCount = 0;
+
+    class Rock {
+      constructor(type) {
+        this.type = type;
+        this.size = Math.random() < 0.7 ? 60 : 90;
+        this.speed = this.size === 60 ? fallSpeed * 1.0 : fallSpeed * 0.6;
+        this.x = Math.random() * (canvas.width - this.size);
+        this.y = -this.size;
+        this.rotation = 0;
+        this.rotationSpeed = (Math.random() - 0.5) * 0.1;
+      }
+      update() { this.y += this.speed; this.rotation += this.rotationSpeed; }
+      draw() {
+        ctx.save();
+        ctx.translate(this.x + this.size/2, this.y + this.size/2);
+        ctx.rotate(this.rotation);
+        if (images[this.type] && images[this.type].complete) {
+          ctx.drawImage(images[this.type], -this.size/2, -this.size/2, this.size, this.size);
+        } else {
+          ctx.fillStyle = getColorForType(this.type);
+          ctx.fillRect(-this.size/2, -this.size/2, this.size, this.size);
+        }
+        ctx.restore();
+      }
+    }
+
+    class Particle {
+      constructor(x, y, color) {
+        this.x = x; this.y = y; this.radius = Math.random() * 4 + 2; this.color = color;
+        this.speedX = (Math.random() - 0.5) * 6; this.speedY = (Math.random() - 0.5) * 6; this.life = 40;
+      }
+      update() { this.x += this.speedX; this.y += this.speedY; this.radius *= 0.95; this.life--; }
+      draw() { ctx.beginPath(); ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2); ctx.fillStyle = this.color; ctx.fill(); }
+    }
+
+    function spawnRock() {
+      normalCount++;
+      let type = "stone";
+      if (normalCount > 15 && Math.random() < 0.2) type = "silver";
+      if (normalCount > 30 && Math.random() < 0.1) type = "gold";
+      if (normalCount > 10 && Math.random() < 0.05) type = "red";
+      rocks.push(new Rock(type));
+      if (normalCount > 1000) normalCount = 0;
+    }
+
+    function getColorForType(type) {
+      if (type === "stone") return "gray";
+      if (type === "silver") return "lightgray";
+      if (type === "gold") return "gold";
+      if (type === "red") return "red";
+      return "white";
+    }
+
+    // Oyun döngüsü
+    let lastFrame = null;
+    function gameLoop(ts) {
+      if (lastFrame === null) lastFrame = ts;
+      const deltaMs = ts - lastFrame;
+      const deltaSec = deltaMs / 1000;
+      lastFrame = ts;
+
+      // online kazım (oranlı)
+      if (kazimGucu > 0) mevcutKazim += (kazimGucu / KAZANC_ORANI) * deltaSec;
+
+      if (ts - lastSpawn > spawnInterval) {
+        spawnRock();
+        lastSpawn = ts;
+      }
+      fallSpeed += 0.0005;
+
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      for (let i = rocks.length - 1; i >= 0; i--) {
+        rocks[i].update();
+        rocks[i].draw();
+        if (rocks[i].y > canvas.height) rocks.splice(i, 1);
+      }
+      for (let i = particles.length - 1; i >= 0; i--) {
+        particles[i].update();
+        particles[i].draw();
+        if (particles[i].life <= 0 || particles[i].radius < 0.5) particles.splice(i, 1);
+      }
+
+      updateUI();
+      requestAnimationFrame(gameLoop);
+    }
+
+    // Tıklama
+    canvas.addEventListener("click", (e) => {
+      const rect = canvas.getBoundingClientRect();
+      const mx = e.clientX - rect.left;
+      const my = e.clientY - rect.top;
+
+      for (let i = rocks.length - 1; i >= 0; i--) {
+        const r = rocks[i];
+        if (mx > r.x && mx < r.x + r.size && my > r.y && my < r.y + r.size) {
+          for (let j = 0; j < 12; j++) particles.push(new Particle(r.x + r.size/2, r.y + r.size/2, getColorForType(r.type)));
+
+          if (r.type === "stone") kazimGucu += 0.0000000001;
+          else if (r.type === "silver") kazimGucu += 0.0000000010;
+          else if (r.type === "gold") kazimGucu += 0.0000000100;
+          else if (r.type === "red") {
+            if (Math.random() < 0.5) { // %50 ihtimalle düşür
+              kazimGucu = kazimGucu * 0.5;
+            }
+          }
+
+          // anlık ödül (oranlı)
+          if (r.type !== "red") mevcutKazim += kazimGucu / KAZANC_ORANI;
+
+          rocks.splice(i, 1);
+          saveGame();
+          break;
+        }
+      }
+    });
+
+    function updateUI() {
+      kazimGucuEl.textContent = Number(kazimGucu || 0).toFixed(10);
+      mevcutKazimEl.textContent = Number(mevcutKazim || 0).toFixed(11);
+    }
+
+    function saveGame() {
+      try {
+        localStorage.setItem("kazimGucu", kazimGucu.toString());
+        localStorage.setItem("mevcutKazim", mevcutKazim.toString());
+        localStorage.setItem("lastUpdateMs", Date.now().toString());
+      } catch (e) { console.warn("localStorage kaydetme hatası:", e); }
+    }
+    const autoSave = setInterval(saveGame, 5000);
+
+    resetBtn.addEventListener("click", () => {
+      if (!confirm("Gerçekten sıfırlamak istiyor musun?")) return;
+      kazimGucu = 0;
+      mevcutKazim = 0;
+      localStorage.removeItem("kazimGucu");
+      localStorage.removeItem("mevcutKazim");
+      localStorage.setItem("lastUpdateMs", Date.now().toString());
+      updateUI();
+    });
+
+    window.addEventListener("beforeunload", saveGame);
+
+    updateUI();
+    requestAnimationFrame(gameLoop);
+  </script>
+</body>
+</html>

@@ -45,7 +45,6 @@
       border-radius:8px;
       cursor:pointer;
     }
-    /* Zorunlu reklam modalı */
     #adModal {
       display:none;
       position:fixed;
@@ -86,7 +85,6 @@
     <canvas id="gameCanvas"></canvas>
   </div>
 
-  <!-- Zorunlu reklam modalı -->
   <div id="adModal">
     <div id="adModalContent">
       <h2>Reklam İzle</h2>
@@ -145,12 +143,21 @@
     let rocks = [];
     let lastSpawn = 0;
 
+    // 🔥 Nadirlik düzenlendi
     function spawnRock() {
       let r = Math.random();
       let type = "stone";
-      if (r > 0.9) type = "red";
-      else if (r > 0.85) type = "gold";
-      else if (r > 0.65) type = "silver";
+
+      if (r < 0.70) {
+        type = "stone";   // %70
+      } else if (r < 0.85) {
+        type = "silver";  // %15
+      } else if (r < 0.95) {
+        type = "gold";    // %10
+      } else {
+        type = "red";     // %5
+      }
+
       rocks.push(new Rock(type));
     }
 
@@ -199,13 +206,11 @@
       requestAnimationFrame(loop);
     }
 
-    // --- Zorunlu reklam işlemleri ---
     const adModal = document.getElementById("adModal");
     const adPlayBtn = document.getElementById("adPlayBtn");
     const adCountdown = document.getElementById("adCountdown");
     const adSecondsEl = document.getElementById("adSeconds");
 
-    // Adblock tespit fonksiyonu
     function detectAdblock(callback) {
       let adTest = document.createElement('div');
       adTest.innerHTML = '&nbsp;';
@@ -257,7 +262,7 @@
           if (remaining <= 0) {
             clearInterval(interval);
             adModal.style.display = "none";
-            loop(); // oyun başlasın
+            loop();
           }
         }, 1000);
       });

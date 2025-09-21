@@ -15,21 +15,6 @@
       height:100vh;
       overflow:hidden;
     }
-    #wrapper {
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      width:100%;
-      height:100%;
-    }
-    .side-banner {
-      width:160px;
-      height:600px;
-      background:#111;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-    }
     #game-container {
       display:flex;
       flex-direction:column;
@@ -60,51 +45,17 @@
       border-radius:8px;
       cursor:pointer;
     }
-    @media (max-width: 900px) {
-      .side-banner { display:none; }
-    }
   </style>
 </head>
 <body>
-  <div id="wrapper">
-    <!-- Sol Banner -->
-    <div class="side-banner">
-      <script type="text/javascript">
-        atOptions = {
-          'key' : '7157a1985dbe1f33cf26181b535e83a1',
-          'format' : 'iframe',
-          'height' : 600,
-          'width' : 160,
-          'params' : {}
-        };
-      </script>
-      <script type="text/javascript" src="//www.highperformanceformat.com/7157a1985dbe1f33cf26181b535e83a1/invoke.js"></script>
+  <div id="game-container">
+    <div id="header">MTrxGame</div>
+    <div id="stats">
+      Kazım Gücü: <span id="kazimGucu">0.0000000000</span><br>
+      Mevcut Kazım: <span id="mevcutKazim">0.0000000000</span>
     </div>
-
-    <!-- Oyun Ortada -->
-    <div id="game-container">
-      <div id="header">MTrxGame</div>
-      <div id="stats">
-        Kazım Gücü: <span id="kazimGucu">0.0000000000</span><br>
-        Mevcut Kazım: <span id="mevcutKazim">0.0000000000</span>
-      </div>
-      <button id="rewardBtn">Reklam İzle (2x)</button>
-      <canvas id="gameCanvas"></canvas>
-    </div>
-
-    <!-- Sağ Banner -->
-    <div class="side-banner">
-      <script type="text/javascript">
-        atOptions = {
-          'key' : '7157a1985dbe1f33cf26181b535e83a1',
-          'format' : 'iframe',
-          'height' : 600,
-          'width' : 160,
-          'params' : {}
-        };
-      </script>
-      <script type="text/javascript" src="//www.highperformanceformat.com/7157a1985dbe1f33cf26181b535e83a1/invoke.js"></script>
-    </div>
+    <button id="rewardBtn">Reklam İzle (2x)</button>
+    <canvas id="gameCanvas"></canvas>
   </div>
 
   <script>

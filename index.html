@@ -5,110 +5,105 @@
   <title>MTrxGame</title>
   <style>
     body {
-      margin: 0;
-      background: black;
-      font-family: sans-serif;
-      color: white;
-      display: flex;
-      justify-content: center;
-      align-items: flex-start;
-      height: 100vh;
-      overflow: hidden;
+      margin:0;
+      background:black;
+      color:white;
+      font-family:sans-serif;
+      display:flex;
+      justify-content:center;
+      align-items:center;
+      height:100vh;
+      overflow:hidden;
     }
-
-    /* Ana kapsayıcı */
-    .container {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 20px; /* oyun ve banner arası boşluk */
-      width: 100%;
-      height: 100%;
+    #wrapper {
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      width:100%;
+      height:100%;
     }
-
-    /* Oyun alanı */
-    #gameWrapper {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
+    .side-banner {
+      width:160px;
+      height:600px;
+      background:#111;
+      display:flex;
+      align-items:center;
+      justify-content:center;
     }
-
-    #gameTitle {
-      font-size: 36px;
-      margin: 10px;
-      text-align: center;
+    #game-container {
+      display:flex;
+      flex-direction:column;
+      align-items:center;
     }
-
     canvas {
-      background: black;
-      border: 4px solid #555;
-      box-shadow: 0 0 20px rgba(255,255,255,0.2);
+      background:black;
+      border:4px solid #555;
+      box-shadow:0 0 20px rgba(255,255,255,0.2);
     }
-
+    #header {
+      margin-bottom:10px;
+      font-size:36px;
+      font-weight:bold;
+      text-shadow:0 0 10px #0f0;
+    }
     #stats {
-      margin-top: 10px;
-      font-size: 18px;
-      text-align: center;
+      margin-bottom:10px;
+      text-align:center;
+      font-size:18px;
     }
-
-    /* Banner alanı */
-    .banner {
-      width: 160px;
-      height: 600px;
-      background: #222;
-      display: flex;
-      justify-content: center;
-      align-items: center;
+    #rewardBtn {
+      margin-bottom:10px;
+      padding:8px 16px;
+      background:#222;
+      color:white;
+      border:none;
+      border-radius:8px;
+      cursor:pointer;
     }
-
-    /* Küçük ekranlarda bannerları gizle */
-    @media (max-width: 768px) {
-      .banner {
-        display: none;
-      }
+    @media (max-width: 900px) {
+      .side-banner { display:none; }
     }
   </style>
 </head>
 <body>
-  <div class="container">
+  <div id="wrapper">
     <!-- Sol Banner -->
-    <div class="banner">
-      <!-- Sol Adsterra kodu -->
+    <div class="side-banner">
       <script type="text/javascript">
         atOptions = {
-          'key' : '77097b0cfd401c1307136225e0057e97',
+          'key' : '7157a1985dbe1f33cf26181b535e83a1',
           'format' : 'iframe',
           'height' : 600,
           'width' : 160,
           'params' : {}
         };
       </script>
-      <script type="text/javascript" src="//www.highperformanceformat.com/BURAYA_SOL_KEY/invoke.js"></script>
+      <script type="text/javascript" src="//www.highperformanceformat.com/7157a1985dbe1f33cf26181b535e83a1/invoke.js"></script>
     </div>
 
-    <!-- Oyun Alanı -->
-    <div id="gameWrapper">
-      <div id="gameTitle">MTrxGame</div>
-      <canvas id="gameCanvas" width="480" height="720"></canvas>
+    <!-- Oyun Ortada -->
+    <div id="game-container">
+      <div id="header">MTrxGame</div>
       <div id="stats">
-        Kazım Gücü: <span id="kazimGucu">0</span><br>
+        Kazım Gücü: <span id="kazimGucu">0.0000000000</span><br>
         Mevcut Kazım: <span id="mevcutKazim">0.0000000000</span>
       </div>
+      <button id="rewardBtn">Reklam İzle (2x)</button>
+      <canvas id="gameCanvas"></canvas>
     </div>
 
     <!-- Sağ Banner -->
-    <div class="banner">
-      <!-- Sağ Adsterra kodu -->
+    <div class="side-banner">
       <script type="text/javascript">
         atOptions = {
-          'key' : '77097b0cfd401c1307136225e0057e97',
+          'key' : '7157a1985dbe1f33cf26181b535e83a1',
           'format' : 'iframe',
           'height' : 600,
           'width' : 160,
           'params' : {}
         };
       </script>
-      <script type="text/javascript" src="//www.highperformanceformat.com/BURAYA_SAG_KEY/invoke.js"></script>
+      <script type="text/javascript" src="//www.highperformanceformat.com/7157a1985dbe1f33cf26181b535e83a1/invoke.js"></script>
     </div>
   </div>
 
@@ -116,33 +111,54 @@
     const canvas = document.getElementById("gameCanvas");
     const ctx = canvas.getContext("2d");
 
+    canvas.width = window.innerWidth > 600 ? 480 : window.innerWidth * 0.9;
+    canvas.height = window.innerHeight > 600 ? 640 : window.innerHeight * 0.7;
+
     let kazimGucu = 0;
     let mevcutKazim = 0;
+    let multiplier = 1;
+    let lastUpdate = Date.now();
 
     const kazimGucuEl = document.getElementById("kazimGucu");
     const mevcutKazimEl = document.getElementById("mevcutKazim");
+    const rewardBtn = document.getElementById("rewardBtn");
+
+    const images = {
+      stone: new Image(),
+      silver: new Image(),
+      gold: new Image(),
+      red: new Image()
+    };
+    images.stone.src = "stone.png";
+    images.silver.src = "silver.png";
+    images.gold.src = "gold.png";
+    images.red.src = "red.png";
 
     class Rock {
       constructor(type) {
         this.type = type;
-        this.size = 60;
+        this.size = window.innerWidth > 600 ? 60 : 40;
         this.x = Math.random() * (canvas.width - this.size);
         this.y = -this.size;
-        this.speed = 2;
+        this.speed = Math.random() * 2 + 1;
       }
-      update() { this.y += this.speed; }
+      update() {
+        this.y += this.speed;
+      }
       draw() {
-        ctx.fillStyle = this.type === "stone" ? "gray" :
-                        this.type === "silver" ? "lightgray" :
-                        this.type === "gold" ? "gold" : "red";
-        ctx.fillRect(this.x, this.y, this.size, this.size);
+        ctx.drawImage(images[this.type], this.x, this.y, this.size, this.size);
       }
     }
 
     let rocks = [];
+    let lastSpawn = 0;
+
     function spawnRock() {
-      const types = ["stone","silver","gold","red"];
-      const type = types[Math.floor(Math.random()*types.length)];
+      let r = Math.random();
+      let type = "stone";
+      if (r > 0.85) type = "gold";
+      else if (r > 0.65) type = "silver";
+      else if (r > 0.9) type = "red";
       rocks.push(new Rock(type));
     }
 
@@ -150,32 +166,53 @@
       const rect = canvas.getBoundingClientRect();
       const mx = e.clientX - rect.left;
       const my = e.clientY - rect.top;
+
       rocks.forEach((rock, i) => {
-        if (mx > rock.x && mx < rock.x+rock.size && my > rock.y && my < rock.y+rock.size) {
-          if (rock.type === "stone") kazimGucu += 1;
-          if (rock.type === "silver") kazimGucu += 10;
-          if (rock.type === "gold") kazimGucu += 100;
-          if (rock.type === "red") kazimGucu = Math.floor(kazimGucu * 0.5);
-          rocks.splice(i,1);
+        if (mx > rock.x && mx < rock.x + rock.size && my > rock.y && my < rock.y + rock.size) {
+          if (rock.type === "stone") kazimGucu += 0.0000000001;
+          if (rock.type === "silver") kazimGucu += 0.0000000010;
+          if (rock.type === "gold") kazimGucu += 0.0000000100;
+          if (rock.type === "red") kazimGucu *= 0.5;
+          rocks.splice(i, 1);
         }
       });
-      kazimGucuEl.textContent = kazimGucu;
     });
 
-    function gameLoop() {
-      ctx.clearRect(0,0,canvas.width,canvas.height);
-      rocks.forEach((rock,i) => {
-        rock.update();
-        rock.draw();
-        if (rock.y > canvas.height) rocks.splice(i,1);
-      });
-      mevcutKazim += kazimGucu * 0.0000000001;
-      mevcutKazimEl.textContent = mevcutKazim.toFixed(10);
-      requestAnimationFrame(gameLoop);
+    function update() {
+      let now = Date.now();
+      let delta = (now - lastUpdate) / 1000;
+      lastUpdate = now;
+
+      mevcutKazim += kazimGucu * delta * multiplier * 0.01;
+
+      rocks.forEach(r => r.update());
+      rocks = rocks.filter(r => r.y < canvas.height);
+
+      if (Date.now() - lastSpawn > 1000) {
+        spawnRock();
+        lastSpawn = Date.now();
+      }
     }
 
-    setInterval(spawnRock,1500);
-    gameLoop();
+    function draw() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      rocks.forEach(r => r.draw());
+      kazimGucuEl.textContent = kazimGucu.toFixed(10);
+      mevcutKazimEl.textContent = mevcutKazim.toFixed(10);
+    }
+
+    function loop() {
+      update();
+      draw();
+      requestAnimationFrame(loop);
+    }
+
+    rewardBtn.addEventListener("click", () => {
+      multiplier = 2;
+      setTimeout(() => multiplier = 1, 60000);
+    });
+
+    loop();
   </script>
 </body>
 </html>

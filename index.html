@@ -45,6 +45,34 @@
       border-radius:8px;
       cursor:pointer;
     }
+    /* Zorunlu reklam modalı */
+    #adModal {
+      display:none;
+      position:fixed;
+      left:0;top:0;width:100%;height:100%;
+      background:rgba(0,0,0,0.8);
+      z-index:2000;
+      align-items:center;
+      justify-content:center;
+    }
+    #adModalContent {
+      background:#111;
+      padding:20px;
+      border-radius:8px;
+      text-align:center;
+      color:white;
+      max-width:420px;
+      width:90%;
+    }
+    #adModal button {
+      padding:10px 16px;
+      margin-top:10px;
+      border-radius:6px;
+      background:#0a84ff;
+      color:white;
+      border:none;
+      cursor:pointer;
+    }
   </style>
 </head>
 <body>
@@ -56,6 +84,19 @@
     </div>
     <button id="rewardBtn">Reklam İzle (2x)</button>
     <canvas id="gameCanvas"></canvas>
+  </div>
+
+  <!-- Zorunlu reklam modalı -->
+  <div id="adModal">
+    <div id="adModalContent">
+      <h2>Reklam İzle</h2>
+      <p>Oyuna başlamak için 15 saniyelik reklam izlemelisiniz.</p>
+      <p style="font-size:14px;color:#bbb;" id="adInfo">(Reklam gösteriliyor... lütfen bekleyin)</p>
+      <button id="adPlayBtn">Reklamı Başlat</button>
+      <div id="adCountdown" style="margin-top:12px;color:#ddd;display:none;">
+        Kalan: <span id="adSeconds">15</span>s
+      </div>
+    </div>
   </div>
 
   <script>
@@ -158,19 +199,60 @@
       requestAnimationFrame(loop);
     }
 
-    rewardBtn.addEventListener("click", () => {
+    // --- Zorunlu reklam işlemleri ---
+    const adModal = document.getElementById("adModal");
+    const adPlayBtn = document.getElementById("adPlayBtn");
+    const adCountdown = document.getElementById("adCountdown");
+    const adSecondsEl = document.getElementById("adSeconds");
+
+    function showAdModal() {
+      adModal.style.display = "flex";
+      adCountdown.style.display = "none";
+    }
+
+    function startAd() {
+      adPlayBtn.disabled = true;
+
       // Social Bar script'i dinamik yükle
       const script = document.createElement("script");
       script.type = "text/javascript";
       script.src = "//pl27694130.revenuecpmgate.com/2e/94/88/2e948837a667b3f3ce9f88291ae3f2d3.js";
       document.body.appendChild(script);
 
-      // 2x kazım gücü 60 saniye aktif
+      let remaining = 15;
+      adCountdown.style.display = "block";
+      adSecondsEl.textContent = remaining;
+
+      let interval = setInterval(() => {
+        remaining--;
+        adSecondsEl.textContent = remaining;
+        if (remaining <= 0) {
+          clearInterval(interval);
+          adModal.style.display = "none";
+          loop(); // oyun başlasın
+        }
+      }, 1000);
+    }
+
+    adPlayBtn.addEventListener("click", startAd);
+
+    rewardBtn.addEventListener("click", () => {
+      const script = document.createElement("script");
+      script.type = "text/javascript";
+      script.src = "//pl27694130.revenuecpmgate.com/2e/94/88/2e948837a667b3f3ce9f88291ae3f2d3.js";
+      document.body.appendChild(script);
+
       multiplier = 2;
       setTimeout(() => multiplier = 1, 60000);
     });
 
-    loop();
+    // --- Oturum reklam kontrolü ---
+    if (!sessionStorage.getItem("adWatched")) {
+      sessionStorage.setItem("adWatched", "true");
+      showAdModal();
+    } else {
+      loop();
+    }
   </script>
 </body>
 </html>

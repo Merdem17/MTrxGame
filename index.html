@@ -91,7 +91,7 @@
     <div id="adModalContent">
       <h2>Reklam İzle</h2>
       <p>Oyuna başlamak için 15 saniyelik reklam izlemelisiniz.</p>
-      <p style="font-size:14px;color:#bbb;" id="adInfo">(Reklam gösteriliyor... lütfen bekleyin)</p>
+      <p style="font-size:14px;color:#bbb;" id="adInfo">(Reklam şu anda görüntüleniyor...)</p>
       <button id="adPlayBtn">Reklamı Başlat</button>
       <div id="adCountdown" style="margin-top:12px;color:#ddd;display:none;">
         Kalan: <span id="adSeconds">15</span>s
@@ -205,33 +205,62 @@
     const adCountdown = document.getElementById("adCountdown");
     const adSecondsEl = document.getElementById("adSeconds");
 
+    // Adblock tespit fonksiyonu
+    function detectAdblock(callback) {
+      let adTest = document.createElement('div');
+      adTest.innerHTML = '&nbsp;';
+      adTest.className = 'adsbox';
+      adTest.style.position = 'absolute';
+      adTest.style.height = '1px';
+      adTest.style.width = '1px';
+      adTest.style.top = '-1000px';
+      document.body.appendChild(adTest);
+
+      window.setTimeout(() => {
+        let blocked = false;
+        if (adTest.offsetHeight === 0) {
+          blocked = true;
+        }
+        document.body.removeChild(adTest);
+        callback(blocked);
+      }, 100);
+    }
+
     function showAdModal() {
       adModal.style.display = "flex";
       adCountdown.style.display = "none";
     }
 
     function startAd() {
-      adPlayBtn.disabled = true;
-
-      // Social Bar script'i dinamik yükle
-      const script = document.createElement("script");
-      script.type = "text/javascript";
-      script.src = "//pl27694130.revenuecpmgate.com/2e/94/88/2e948837a667b3f3ce9f88291ae3f2d3.js";
-      document.body.appendChild(script);
-
-      let remaining = 15;
-      adCountdown.style.display = "block";
-      adSecondsEl.textContent = remaining;
-
-      let interval = setInterval(() => {
-        remaining--;
-        adSecondsEl.textContent = remaining;
-        if (remaining <= 0) {
-          clearInterval(interval);
-          adModal.style.display = "none";
-          loop(); // oyun başlasın
+      detectAdblock((blocked) => {
+        if (blocked) {
+          document.getElementById("adInfo").textContent =
+            "⚠️ Reklam engelleyici tespit edildi. Lütfen kapatmadan oyuna devam edemezsiniz.";
+          adPlayBtn.style.display = "none";
+          return;
         }
-      }, 1000);
+
+        adPlayBtn.disabled = true;
+
+        const script = document.createElement("script");
+        script.type = "text/javascript";
+        script.src = "//pl27694130.revenuecpmgate.com/2e/94/88/2e948837a667b3f3ce9f88291ae3f2d3.js";
+        document.body.appendChild(script);
+
+        let remaining = 15;
+        adCountdown.style.display = "block";
+        adSecondsEl.textContent = remaining;
+
+        let interval = setInterval(() => {
+          remaining--;
+          adSecondsEl.textContent = remaining;
+          if (remaining <= 0) {
+            clearInterval(interval);
+            adModal.style.display = "none";
+            loop(); // oyun başlasın
+          }
+        }, 1000);
+      });
     }
 
     adPlayBtn.addEventListener("click", startAd);
@@ -246,7 +275,6 @@
       setTimeout(() => multiplier = 1, 60000);
     });
 
-    // --- Oturum reklam kontrolü ---
     if (!sessionStorage.getItem("adWatched")) {
       sessionStorage.setItem("adWatched", "true");
       showAdModal();

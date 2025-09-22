@@ -96,9 +96,62 @@
       border:none;
       cursor:pointer;
     }
+
+    /* Başlangıç TRX Modalı */
+    #trxModal {
+      display:flex;
+      position:fixed;
+      left:0; top:0;
+      width:100%; height:100%;
+      background:black;
+      align-items:center;
+      justify-content:center;
+      z-index:3000;
+    }
+    #trxModalContent {
+      background:#111;
+      padding:25px;
+      border-radius:10px;
+      text-align:center;
+      color:white;
+      max-width:420px;
+      width:90%;
+    }
+    #trxModalContent input {
+      padding:6px;
+      width:90%;
+      border-radius:6px;
+      border:none;
+      margin:10px 0;
+    }
+    #trxModalContent button {
+      padding:8px 16px;
+      border:none;
+      border-radius:8px;
+      background:#0a84ff;
+      color:white;
+      cursor:pointer;
+      margin-left:4px;
+    }
   </style>
 </head>
 <body>
+  <!-- Başlangıç TRX Yatırma Modalı -->
+  <div id="trxModal">
+    <div id="trxModalContent">
+      <h2>Oyuna Başlamak İçin 25 TRX Yatırın</h2>
+      <p>TRX adresimiz:</p>
+      <div style="margin:10px 0;font-weight:bold;background:#222;padding:8px;border-radius:6px;">
+        <span id="trxAddress">T123456789ABCDEFG</span>
+        <button id="copyTrx">Kopyala</button>
+      </div>
+      <input id="txidInput" type="text" placeholder="TXID girin (simülasyon)">
+      <br>
+      <button id="trxContinueBtn">Devam Et</button>
+      <p id="trxMsg" style="color:orange;margin-top:10px;font-size:14px;"></p>
+    </div>
+  </div>
+
   <div id="game-container">
     <div id="header">MTrxGame</div>
     <div id="stats">
@@ -165,32 +218,20 @@
         this.y = -this.size;
         this.speed = Math.random() * 2 + 1;
       }
-      update() {
-        this.y += this.speed;
-      }
-      draw() {
-        ctx.drawImage(images[this.type], this.x, this.y, this.size, this.size);
-      }
+      update() { this.y += this.speed; }
+      draw() { ctx.drawImage(images[this.type], this.x, this.y, this.size, this.size); }
     }
 
     let rocks = [];
     let lastSpawn = 0;
 
-    // 🔥 Nadirlik düzenlendi
     function spawnRock() {
       let r = Math.random();
       let type = "stone";
-
-      if (r < 0.70) {
-        type = "stone";   // %70
-      } else if (r < 0.85) {
-        type = "silver";  // %15
-      } else if (r < 0.95) {
-        type = "gold";    // %10
-      } else {
-        type = "red";     // %5
-      }
-
+      if (r < 0.70) type = "stone";
+      else if (r < 0.85) type = "silver";
+      else if (r < 0.95) type = "gold";
+      else type = "red";
       rocks.push(new Rock(type));
     }
 
@@ -198,7 +239,6 @@
       const rect = canvas.getBoundingClientRect();
       const mx = e.clientX - rect.left;
       const my = e.clientY - rect.top;
-
       rocks.forEach((rock, i) => {
         if (mx > rock.x && mx < rock.x + rock.size && my > rock.y && my < rock.y + rock.size) {
           if (rock.type === "stone") kazimGucu += 0.0000000001;
@@ -214,16 +254,10 @@
       let now = Date.now();
       let delta = (now - lastUpdate) / 1000;
       lastUpdate = now;
-
       mevcutKazim += kazimGucu * delta * multiplier * 0.01;
-
       rocks.forEach(r => r.update());
       rocks = rocks.filter(r => r.y < canvas.height);
-
-      if (Date.now() - lastSpawn > 1000) {
-        spawnRock();
-        lastSpawn = Date.now();
-      }
+      if (Date.now() - lastSpawn > 1000) { spawnRock(); lastSpawn = Date.now(); }
     }
 
     function draw() {
@@ -233,38 +267,20 @@
       mevcutKazimEl.textContent = mevcutKazim.toFixed(10);
     }
 
-    function loop() {
-      update();
-      draw();
-      requestAnimationFrame(loop);
-    }
+    function loop() { update(); draw(); requestAnimationFrame(loop); }
 
     // Çekim Sistemi
     const withdrawBtn = document.getElementById("withdrawBtn");
     const walletAddressEl = document.getElementById("walletAddress");
     const withdrawMsg = document.getElementById("withdrawMsg");
-
-    const MIN_WITHDRAW = 250; // minimum çekim limiti
+    const MIN_WITHDRAW = 250;
 
     withdrawBtn.addEventListener("click", () => {
       const address = walletAddressEl.value.trim();
-
-      if (!address) {
-        withdrawMsg.textContent = "⚠️ Lütfen geçerli bir cüzdan adresi girin.";
-        withdrawMsg.style.color = "orange";
-        return;
-      }
-
-      const trxAmount = mevcutKazim; // simülasyon: 1 mevcutKazim = 1 TRX
-
-      if (trxAmount < MIN_WITHDRAW) {
-        withdrawMsg.textContent = `⚠️ Minimum çekim limiti ${MIN_WITHDRAW} TRX. Şu an bakiyeniz: ${trxAmount.toFixed(2)} TRX`;
-        withdrawMsg.style.color = "red";
-        return;
-      }
-
-      withdrawMsg.textContent = `✅ Çekim talebiniz alındı. Adresinize (${address}) gönderim yapılacaktır.`;
-      withdrawMsg.style.color = "lime";
+      if (!address) { withdrawMsg.textContent = "⚠️ Lütfen geçerli bir cüzdan adresi girin."; withdrawMsg.style.color = "orange"; return; }
+      const trxAmount = mevcutKazim;
+      if (trxAmount < MIN_WITHDRAW) { withdrawMsg.textContent = `⚠️ Minimum çekim limiti ${MIN_WITHDRAW} TRX. Şu an bakiyeniz: ${trxAmount.toFixed(2)} TRX`; withdrawMsg.style.color = "red"; return; }
+      withdrawMsg.textContent = `✅ Çekim talebiniz alındı. Adresinize (${address}) gönderim yapılacaktır.`; withdrawMsg.style.color = "lime";
     });
 
     // Reklam Sistemi
@@ -282,72 +298,52 @@
       adTest.style.width = '1px';
       adTest.style.top = '-1000px';
       document.body.appendChild(adTest);
-
       window.setTimeout(() => {
-        let blocked = false;
-        if (adTest.offsetHeight === 0) {
-          blocked = true;
-        }
+        let blocked = adTest.offsetHeight === 0;
         document.body.removeChild(adTest);
         callback(blocked);
       }, 100);
     }
 
-    function showAdModal() {
-      adModal.style.display = "flex";
-      adCountdown.style.display = "none";
-    }
+    function showAdModal() { adModal.style.display = "flex"; adCountdown.style.display = "none"; }
 
     function startAd() {
       detectAdblock((blocked) => {
-        if (blocked) {
-          document.getElementById("adInfo").textContent =
-            "⚠️ Reklam engelleyici tespit edildi. Lütfen kapatmadan oyuna devam edemezsiniz.";
-          adPlayBtn.style.display = "none";
-          return;
-        }
-
+        if (blocked) { document.getElementById("adInfo").textContent = "⚠️ Reklam engelleyici tespit edildi. Lütfen kapatmadan oyuna devam edemezsiniz."; adPlayBtn.style.display = "none"; return; }
         adPlayBtn.disabled = true;
-
         const script = document.createElement("script");
         script.type = "text/javascript";
         script.src = "//pl27694130.revenuecpmgate.com/2e/94/88/2e948837a667b3f3ce9f88291ae3f2d3.js";
         document.body.appendChild(script);
-
         let remaining = 15;
         adCountdown.style.display = "block";
         adSecondsEl.textContent = remaining;
-
-        let interval = setInterval(() => {
-          remaining--;
-          adSecondsEl.textContent = remaining;
-          if (remaining <= 0) {
-            clearInterval(interval);
-            adModal.style.display = "none";
-            loop();
-          }
-        }, 1000);
+        let interval = setInterval(() => { remaining--; adSecondsEl.textContent = remaining; if (remaining <= 0) { clearInterval(interval); adModal.style.display = "none"; loop(); } }, 1000);
       });
     }
 
     adPlayBtn.addEventListener("click", startAd);
+    rewardBtn.addEventListener("click", () => { const script = document.createElement("script"); script.type = "text/javascript"; script.src = "//pl27694130.revenuecpmgate.com/2e/94/88/2e948837a667b3f3ce9f88291ae3f2d3.js"; document.body.appendChild(script); multiplier = 2; setTimeout(() => multiplier = 1, 60000); });
 
-    rewardBtn.addEventListener("click", () => {
-      const script = document.createElement("script");
-      script.type = "text/javascript";
-      script.src = "//pl27694130.revenuecpmgate.com/2e/94/88/2e948837a667b3f3ce9f88291ae3f2d3.js";
-      document.body.appendChild(script);
+    // TRX Modal Entegrasyonu
+    const trxModalEl = document.getElementById("trxModal");
+    const trxAddressEl = document.getElementById("trxAddress");
+    const copyTrxBtn = document.getElementById("copyTrx");
+    const trxContinueBtn = document.getElementById("trxContinueBtn");
+    const txidInput = document.getElementById("txidInput");
+    const trxMsg = document.getElementById("trxMsg");
 
-      multiplier = 2;
-      setTimeout(() => multiplier = 1, 60000);
+    // Kopyala
+    copyTrxBtn.addEventListener("click", () => { navigator.clipboard.writeText(trxAddressEl.textContent).then(() => { trxMsg.textContent = "Adres kopyalandı!"; trxMsg.style.color = "lime"; }); });
+
+    // Devam Et (simülasyon)
+    trxContinueBtn.addEventListener("click", () => {
+      const txid = txidInput.value.trim();
+      if (!txid) { trxMsg.textContent = "⚠️ Lütfen TXID girin veya simülasyon için bir şey yazın."; trxMsg.style.color = "orange"; return; }
+      trxModalEl.style.display = "none";
+      // Oyunu başlat
+      if (!sessionStorage.getItem("adWatched")) { sessionStorage.setItem("adWatched", "true"); showAdModal(); } else { loop(); }
     });
-
-    if (!sessionStorage.getItem("adWatched")) {
-      sessionStorage.setItem("adWatched", "true");
-      showAdModal();
-    } else {
-      loop();
-    }
   </script>
 </body>
 </html>

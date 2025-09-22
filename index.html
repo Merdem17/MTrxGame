@@ -45,6 +45,30 @@
       border-radius:8px;
       cursor:pointer;
     }
+    #withdraw {
+      margin-top:15px;
+      text-align:center;
+    }
+    #withdraw input {
+      padding:6px;
+      width:300px;
+      border-radius:6px;
+      border:none;
+      margin-bottom:8px;
+    }
+    #withdraw button {
+      padding:8px 16px;
+      background:#0a84ff;
+      color:white;
+      border:none;
+      border-radius:8px;
+      cursor:pointer;
+    }
+    #withdraw p {
+      margin-top:10px;
+      font-size:14px;
+      color:#ccc;
+    }
     #adModal {
       display:none;
       position:fixed;
@@ -83,8 +107,17 @@
     </div>
     <button id="rewardBtn">Reklam İzle (2x)</button>
     <canvas id="gameCanvas"></canvas>
+
+    <!-- Çekim Sistemi -->
+    <div id="withdraw">
+      <input id="walletAddress" type="text" placeholder="FaucetPay / TronLink adresinizi girin">
+      <br>
+      <button id="withdrawBtn">Çekim Yap</button>
+      <p id="withdrawMsg"></p>
+    </div>
   </div>
 
+  <!-- Reklam Modal -->
   <div id="adModal">
     <div id="adModalContent">
       <h2>Reklam İzle</h2>
@@ -206,6 +239,35 @@
       requestAnimationFrame(loop);
     }
 
+    // Çekim Sistemi
+    const withdrawBtn = document.getElementById("withdrawBtn");
+    const walletAddressEl = document.getElementById("walletAddress");
+    const withdrawMsg = document.getElementById("withdrawMsg");
+
+    const MIN_WITHDRAW = 250; // minimum çekim limiti
+
+    withdrawBtn.addEventListener("click", () => {
+      const address = walletAddressEl.value.trim();
+
+      if (!address) {
+        withdrawMsg.textContent = "⚠️ Lütfen geçerli bir cüzdan adresi girin.";
+        withdrawMsg.style.color = "orange";
+        return;
+      }
+
+      const trxAmount = mevcutKazim; // simülasyon: 1 mevcutKazim = 1 TRX
+
+      if (trxAmount < MIN_WITHDRAW) {
+        withdrawMsg.textContent = `⚠️ Minimum çekim limiti ${MIN_WITHDRAW} TRX. Şu an bakiyeniz: ${trxAmount.toFixed(2)} TRX`;
+        withdrawMsg.style.color = "red";
+        return;
+      }
+
+      withdrawMsg.textContent = `✅ Çekim talebiniz alındı. Adresinize (${address}) gönderim yapılacaktır.`;
+      withdrawMsg.style.color = "lime";
+    });
+
+    // Reklam Sistemi
     const adModal = document.getElementById("adModal");
     const adPlayBtn = document.getElementById("adPlayBtn");
     const adCountdown = document.getElementById("adCountdown");

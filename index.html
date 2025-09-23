@@ -43,7 +43,7 @@
       color:white;
       border:none;
       border-radius:8px;
-      cursor:pointer;
+      cursor:not-allowed;
     }
     #withdraw {
       margin-top:15px;
@@ -68,33 +68,6 @@
       margin-top:10px;
       font-size:14px;
       color:#ccc;
-    }
-    #adModal {
-      display:none;
-      position:fixed;
-      left:0;top:0;width:100%;height:100%;
-      background:rgba(0,0,0,0.8);
-      z-index:2000;
-      align-items:center;
-      justify-content:center;
-    }
-    #adModalContent {
-      background:#111;
-      padding:20px;
-      border-radius:8px;
-      text-align:center;
-      color:white;
-      max-width:420px;
-      width:90%;
-    }
-    #adModal button {
-      padding:10px 16px;
-      margin-top:10px;
-      border-radius:6px;
-      background:#0a84ff;
-      color:white;
-      border:none;
-      cursor:pointer;
     }
 
     /* Başlangıç TRX Modalı */
@@ -132,6 +105,40 @@
       color:white;
       cursor:pointer;
       margin-left:4px;
+    }
+
+    /* Reklam Modal */
+    #adModal {
+      display:none;
+      position:fixed;
+      left:0;top:0;width:100%;height:100%;
+      background:rgba(0,0,0,0.8);
+      z-index:2000;
+      align-items:center;
+      justify-content:center;
+    }
+    #adModalContent {
+      background:#111;
+      padding:20px;
+      border-radius:8px;
+      text-align:center;
+      color:white;
+      max-width:420px;
+      width:90%;
+    }
+
+    /* Sağ üst Reklamı İzle butonu */
+    #watchAdBtn {
+      position:fixed;
+      top:20px;
+      right:20px;
+      padding:10px 16px;
+      background:#0a84ff;
+      color:white;
+      border:none;
+      border-radius:6px;
+      cursor:pointer;
+      z-index:1000;
     }
   </style>
 </head>
@@ -174,17 +181,16 @@
   <div id="adModal">
     <div id="adModalContent">
       <h2>Reklam İzle</h2>
-      <p>Oyuna başlamak için 15 saniyelik reklam izlemelisiniz.</p>
-      <p style="font-size:14px;color:#bbb;" id="adInfo">(Reklam şu anda görüntüleniyor...)</p>
-      <button id="adPlayBtn">Reklamı Başlat</button>
-      <div id="adCountdown" style="margin-top:12px;color:#ddd;display:none;">
-        Kalan: <span id="adSeconds">15</span>s
-      </div>
+      <p id="adInfo">Oyunun başlaması için 15 saniyelik reklam izleyin</p>
+      <div id="adCountdown" style="margin-top:12px;color:#ddd;">Kalan: <span id="adSeconds">15</span>s</div>
     </div>
   </div>
 
+  <!-- Sağ üstte Reklamı İzle butonu -->
+  <button id="watchAdBtn">Reklamı İzle</button>
+
   <script>
-    // Oyun ve taş mantığı tamamen aynı
+    // Oyun ve taş mantığı
     const canvas = document.getElementById("gameCanvas");
     const ctx = canvas.getContext("2d");
     canvas.width = window.innerWidth > 600 ? 480 : window.innerWidth * 0.9;
@@ -192,8 +198,8 @@
 
     let kazimGucu = 0;
     let mevcutKazim = 0;
-    let multiplier = 1;
     let lastUpdate = Date.now();
+    let gameStarted = false; // oyun henüz başlamadı
 
     const kazimGucuEl = document.getElementById("kazimGucu");
     const mevcutKazimEl = document.getElementById("mevcutKazim");
@@ -214,30 +220,55 @@
     let rocks=[]; let lastSpawn=0;
     function spawnRock(){ let r=Math.random(); let type="stone"; if(r<0.70) type="stone"; else if(r<0.85) type="silver"; else if(r<0.95) type="gold"; else type="red"; rocks.push(new Rock(type)); }
 
-    canvas.addEventListener("click",(e)=>{ const rect=canvas.getBoundingClientRect(); const mx=e.clientX-rect.left; const my=e.clientY-rect.top; rocks.forEach((rock,i)=>{ if(mx>rock.x && mx<rock.x+rock.size && my>rock.y && my<rock.y+rock.size){ if(rock.type==="stone") kazimGucu+=0.0000000001; if(rock.type==="silver") kazimGucu+=0.0000000010; if(rock.type==="gold") kazimGucu+=0.0000000100; if(rock.type==="red") kazimGucu*=0.5; rocks.splice(i,1); } }); });
+    canvas.addEventListener("click",(e)=>{
+      if(!gameStarted) return; // oyun başlamadıysa tıklamaları engelle
+      const rect=canvas.getBoundingClientRect();
+      const mx=e.clientX-rect.left;
+      const my=e.clientY-rect.top;
+      rocks.forEach((rock,i)=>{
+        if(mx>rock.x && mx<rock.x+rock.size && my>rock.y && my<rock.y+rock.size){
+          if(rock.type==="stone") kazimGucu+=0.0000000001;
+          if(rock.type==="silver") kazimGucu+=0.0000000010;
+          if(rock.type==="gold") kazimGucu+=0.0000000100;
+          if(rock.type==="red") kazimGucu*=0.5;
+          rocks.splice(i,1);
+        }
+      });
+    });
 
-    function update(){ let now=Date.now(); let delta=(now-lastUpdate)/1000; lastUpdate=now; mevcutKazim+=kazimGucu*delta*multiplier*0.01; rocks.forEach(r=>r.update()); rocks=rocks.filter(r=>r.y<canvas.height); if(Date.now()-lastSpawn>1000){spawnRock(); lastSpawn=Date.now();} }
-    function draw(){ ctx.clearRect(0,0,canvas.width,canvas.height); rocks.forEach(r=>r.draw()); kazimGucuEl.textContent=kazimGucu.toFixed(10); mevcutKazimEl.textContent=mevcutKazim.toFixed(10); }
+    function update(){
+      if(!gameStarted) return; // oyun başlamadıysa update yok
+      let now=Date.now();
+      let delta=(now-lastUpdate)/1000;
+      lastUpdate=now;
+      mevcutKazim+=kazimGucu*delta*0.01;
+      rocks.forEach(r=>r.update());
+      rocks=rocks.filter(r=>r.y<canvas.height);
+      if(Date.now()-lastSpawn>1000){spawnRock(); lastSpawn=Date.now();}
+    }
+    function draw(){
+      ctx.clearRect(0,0,canvas.width,canvas.height);
+      rocks.forEach(r=>r.draw());
+      kazimGucuEl.textContent=kazimGucu.toFixed(10);
+      mevcutKazimEl.textContent=mevcutKazim.toFixed(10);
+    }
     function loop(){ update(); draw(); requestAnimationFrame(loop); }
+
+    // Reward butonunu devre dışı bırak
+    rewardBtn.addEventListener("click",()=>{ alert("Bu buton devre dışı bırakıldı."); });
 
     // Çekim Sistemi
     const withdrawBtn=document.getElementById("withdrawBtn");
     const walletAddressEl=document.getElementById("walletAddress");
     const withdrawMsg=document.getElementById("withdrawMsg");
     const MIN_WITHDRAW=250;
-    withdrawBtn.addEventListener("click",()=>{ const address=walletAddressEl.value.trim(); if(!address){withdrawMsg.textContent="⚠️ Lütfen geçerli bir cüzdan adresi girin."; withdrawMsg.style.color="orange"; return;} const trxAmount=mevcutKazim; if(trxAmount<MIN_WITHDRAW){withdrawMsg.textContent=`⚠️ Minimum çekim limiti ${MIN_WITHDRAW} TRX. Şu an bakiyeniz: ${trxAmount.toFixed(2)} TRX`; withdrawMsg.style.color="red"; return;} withdrawMsg.textContent=`✅ Çekim talebiniz alındı. Adresinize (${address}) gönderim yapılacaktır.`; withdrawMsg.style.color="lime"; });
-
-    // Reklam Sistemi
-    const adModal=document.getElementById("adModal");
-    const adPlayBtn=document.getElementById("adPlayBtn");
-    const adCountdown=document.getElementById("adCountdown");
-    const adSecondsEl=document.getElementById("adSeconds");
-
-    function detectAdblock(callback){ let adTest=document.createElement('div'); adTest.innerHTML='&nbsp;'; adTest.className='adsbox'; adTest.style.position='absolute'; adTest.style.height='1px'; adTest.style.width='1px'; adTest.style.top='-1000px'; document.body.appendChild(adTest); window.setTimeout(()=>{ let blocked=adTest.offsetHeight===0; document.body.removeChild(adTest); callback(blocked); },100); }
-    function showAdModal(){ adModal.style.display="flex"; adCountdown.style.display="none"; }
-    function startAd(){ detectAdblock((blocked)=>{ if(blocked){document.getElementById("adInfo").textContent="⚠️ Reklam engelleyici tespit edildi. Lütfen kapatmadan oyuna devam edemezsiniz."; adPlayBtn.style.display="none"; return;} adPlayBtn.disabled=true; const script=document.createElement("script"); script.type="text/javascript"; script.src="//pl27694130.revenuecpmgate.com/2e/94/88/2e948837a667b3f3ce9f88291ae3f2d3.js"; document.body.appendChild(script); let remaining=15; adCountdown.style.display="block"; adSecondsEl.textContent=remaining; let interval=setInterval(()=>{ remaining--; adSecondsEl.textContent=remaining; if(remaining<=0){ clearInterval(interval); adModal.style.display="none"; loop(); } },1000); }); }
-    adPlayBtn.addEventListener("click",startAd);
-    rewardBtn.addEventListener("click",()=>{ const script=document.createElement("script"); script.type="text/javascript"; script.src="//pl27694130.revenuecpmgate.com/2e/94/88/2e948837a667b3f3ce9f88291ae3f2d3.js"; document.body.appendChild(script); multiplier=2; setTimeout(()=>multiplier=1,60000); });
+    withdrawBtn.addEventListener("click",()=>{
+      const address=walletAddressEl.value.trim();
+      if(!address){ withdrawMsg.textContent="⚠️ Lütfen geçerli bir cüzdan adresi girin."; withdrawMsg.style.color="orange"; return; }
+      const trxAmount=mevcutKazim;
+      if(trxAmount<MIN_WITHDRAW){ withdrawMsg.textContent=`⚠️ Minimum çekim limiti ${MIN_WITHDRAW} TRX. Şu an bakiyeniz: ${trxAmount.toFixed(2)} TRX`; withdrawMsg.style.color="red"; return; }
+      withdrawMsg.textContent=`✅ Çekim talebiniz alındı. Adresinize (${address}) gönderim yapılacaktır.`; withdrawMsg.style.color="lime";
+    });
 
     // TRX Modal Entegrasyonu
     const trxModalEl=document.getElementById("trxModal");
@@ -246,14 +277,40 @@
     const txidInput=document.getElementById("txidInput");
     const trxMsg=document.getElementById("trxMsg");
 
-    copyTrxBtn.addEventListener("click",()=>{ navigator.clipboard.writeText(trxAddressEl.textContent).then(()=>{ trxMsg.textContent="Adres kopyalandı!"; trxMsg.style.color="lime"; }); });
+    copyTrxBtn.addEventListener("click",()=>{
+      navigator.clipboard.writeText(document.getElementById("trxAddress").textContent).then(()=>{
+        trxMsg.textContent="Adres kopyalandı!";
+        trxMsg.style.color="lime";
+      });
+    });
 
     trxContinueBtn.addEventListener("click",()=>{
       const txid=txidInput.value.trim();
       if(!txid){ trxMsg.textContent="⚠️ Lütfen TXID girin veya simülasyon için bir şey yazın."; trxMsg.style.color="orange"; return; }
-      trxModalEl.style.display="none";
-      if(!sessionStorage.getItem("adWatched")){ sessionStorage.setItem("adWatched","true"); showAdModal(); } else { loop(); }
+      trxModalEl.style.display="none"; // oyun TRX modalından sonra açılıyor
+      loop(); // oyun döngüsü başlıyor ama tıklamalar aktif değil
     });
+
+    // Reklam sistemi
+    const adModal = document.getElementById("adModal");
+    const adSecondsEl = document.getElementById("adSeconds");
+    const watchAdBtn = document.getElementById("watchAdBtn");
+
+    watchAdBtn.addEventListener("click", ()=>{
+      adModal.style.display = "flex";
+      let remaining = 15;
+      adSecondsEl.textContent = remaining;
+      const interval = setInterval(()=>{
+        remaining--;
+        adSecondsEl.textContent = remaining;
+        if(remaining <= 0){
+          clearInterval(interval);
+          adModal.style.display = "none";
+          gameStarted = true; // oyun başlıyor
+        }
+      },1000);
+    });
+
   </script>
 </body>
 </html>

@@ -70,6 +70,11 @@ const ctx = canvas.getContext("2d");
 canvas.width = window.innerWidth > 600 ? 480 : window.innerWidth * 0.9;
 canvas.height = window.innerHeight > 600 ? 640 : window.innerHeight * 0.7;
 
+window.addEventListener("resize", () => {
+  canvas.width = window.innerWidth > 600 ? 480 : window.innerWidth * 0.9;
+  canvas.height = window.innerHeight > 600 ? 640 : window.innerHeight * 0.7;
+});
+
 let kazimGucu = 0;
 let mevcutKazim = 0;
 let lastUpdate = Date.now();
@@ -141,23 +146,16 @@ function update(){
   let now = Date.now();
   let delta = (now-lastUpdate)/1000;
   lastUpdate=now;
+
   mevcutKazim += kazimGucu*delta*0.01;
   rocks.forEach(r=>r.update());
   rocks = rocks.filter(r=>r.y<canvas.height);
 
   if(Date.now()-lastSpawn>1500){ spawnRock(); lastSpawn=Date.now(); }
 
-  // Kırmızı taş spawn mantığı kazım gücüne göre
-  let redInterval = 0;
-  if(kazimGucu <= 1000){
-    redInterval = 100;
-  } else if(kazimGucu <= 2000){
-    redInterval = 250;
-  } else {
-    redInterval = 25000; // 250 kazım gücü ~ 30s
-  }
-
-  if(kazimGucu >= redInterval && (now - lastRedSpawnTime > 0)){
+  // Kırmızı taş spawn düzeltildi (zaman tabanlı)
+  let redSpawnFrequency = kazimGucu < 1000 ? 15000 : kazimGucu < 2000 ? 10000 : 5000; // ms
+  if(now - lastRedSpawnTime > redSpawnFrequency){
     spawnRed();
     lastRedSpawnTime = now;
   }
@@ -172,7 +170,7 @@ function draw(){
 
 function loop(){ update(); draw(); requestAnimationFrame(loop); }
 
-// TRX modal ve reklam sistemi (Sürüm 1 mantığı korunuyor)
+// TRX modal ve reklam sistemi
 const trxModalEl=document.getElementById("trxModal");
 const copyTrxBtn=document.getElementById("copyTrx");
 const trxContinueBtn=document.getElementById("trxContinueBtn");
@@ -184,11 +182,20 @@ const adModal = document.getElementById("adModal");
 const adCountdown = document.getElementById("adCountdown");
 const adSecondsEl = document.getElementById("adSeconds");
 
-copyTrxBtn.addEventListener("click",()=>{ navigator.clipboard.writeText(trxAddressEl.textContent).then(()=>{ trxMsg.textContent="Adres kopyalandı!"; trxMsg.style.color="lime"; }); });
+copyTrxBtn.addEventListener("click",()=>{ 
+  navigator.clipboard.writeText(trxAddressEl.textContent).then(()=>{ 
+    trxMsg.textContent="Adres kopyalandı!"; 
+    trxMsg.style.color="lime"; 
+  }); 
+});
 
 trxContinueBtn.addEventListener("click",()=>{
   const txid=txidInput.value.trim();
-  if(!txid){ trxMsg.textContent="⚠️ Lütfen TXID girin veya simülasyon için bir şey yazın."; trxMsg.style.color="orange"; return; }
+  if(!txid){ 
+    trxMsg.textContent="⚠️ Lütfen TXID girin veya simülasyon için bir şey yazın."; 
+    trxMsg.style.color="orange"; 
+    return; 
+  }
   trxModalEl.style.display="none";
   watchAdBtn.style.display="block";
 });

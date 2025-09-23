@@ -4,137 +4,27 @@
   <meta charset="UTF-8">
   <title>MTrxGame</title>
   <style>
-    body {
-      margin:0;
-      background:black;
-      color:white;
-      font-family:sans-serif;
-      display:flex;
-      justify-content:center;
-      align-items:center;
-      height:100vh;
-      overflow:hidden;
-    }
-    #game-container {
-      display:flex;
-      flex-direction:column;
-      align-items:center;
-    }
-    canvas {
-      background:black;
-      border:4px solid #555;
-      box-shadow:0 0 20px rgba(255,255,255,0.2);
-    }
-    #header {
-      margin-bottom:10px;
-      font-size:36px;
-      font-weight:bold;
-      text-shadow:0 0 10px #0f0;
-    }
-    #stats {
-      margin-bottom:10px;
-      text-align:center;
-      font-size:18px;
-    }
-    #withdraw {
-      margin-top:15px;
-      text-align:center;
-    }
-    #withdraw input {
-      padding:6px;
-      width:300px;
-      border-radius:6px;
-      border:none;
-      margin-bottom:8px;
-    }
-    #withdraw button {
-      padding:8px 16px;
-      background:#0a84ff;
-      color:white;
-      border:none;
-      border-radius:8px;
-      cursor:pointer;
-    }
-    #withdraw p {
-      margin-top:10px;
-      font-size:14px;
-      color:#ccc;
-    }
-
-    /* Başlangıç TRX Modalı */
-    #trxModal {
-      display:flex;
-      position:fixed;
-      left:0; top:0;
-      width:100%; height:100%;
-      background:black;
-      align-items:center;
-      justify-content:center;
-      z-index:3000;
-    }
-    #trxModalContent {
-      background:#111;
-      padding:25px;
-      border-radius:10px;
-      text-align:center;
-      color:white;
-      max-width:420px;
-      width:90%;
-    }
-    #trxModalContent input {
-      padding:6px;
-      width:90%;
-      border-radius:6px;
-      border:none;
-      margin:10px 0;
-    }
-    #trxModalContent button {
-      padding:8px 16px;
-      border:none;
-      border-radius:8px;
-      background:#0a84ff;
-      color:white;
-      cursor:pointer;
-      margin-left:4px;
-    }
-
-    /* Reklam Modal */
-    #adModal {
-      display:none;
-      position:fixed;
-      left:0;top:0;width:100%;height:100%;
-      background:rgba(0,0,0,0.8);
-      z-index:2000;
-      align-items:center;
-      justify-content:center;
-    }
-    #adModalContent {
-      background:#111;
-      padding:20px;
-      border-radius:8px;
-      text-align:center;
-      color:white;
-      max-width:420px;
-      width:90%;
-    }
-
-    /* Sağ üst Reklamı İzle butonu */
-    #watchAdBtn {
-      position:fixed;
-      top:20px;
-      right:20px;
-      padding:10px 16px;
-      background:#0a84ff;
-      color:white;
-      border:none;
-      border-radius:6px;
-      cursor:pointer;
-      z-index:1000;
-    }
+    body {margin:0; background:black; color:white; font-family:sans-serif; display:flex; justify-content:center; align-items:center; height:100vh; overflow:hidden;}
+    #game-container {display:flex; flex-direction:column; align-items:center;}
+    canvas {background:black; border:4px solid #555; box-shadow:0 0 20px rgba(255,255,255,0.2);}
+    #header {margin-bottom:10px; font-size:36px; font-weight:bold; text-shadow:0 0 10px #0f0;}
+    #stats {margin-bottom:10px; text-align:center; font-size:18px;}
+    #withdraw {margin-top:15px; text-align:center;}
+    #withdraw input {padding:6px; width:300px; border-radius:6px; border:none; margin-bottom:8px;}
+    #withdraw button {padding:8px 16px; background:#0a84ff; color:white; border:none; border-radius:8px; cursor:pointer;}
+    #withdraw p {margin-top:10px; font-size:14px; color:#ccc;}
+    #trxModal {display:flex; position:fixed; left:0; top:0; width:100%; height:100%; background:black; align-items:center; justify-content:center; z-index:3000;}
+    #trxModalContent {background:#111; padding:25px; border-radius:10px; text-align:center; color:white; max-width:420px; width:90%;}
+    #trxModalContent input {padding:6px; width:90%; border-radius:6px; border:none; margin:10px 0;}
+    #trxModalContent button {padding:8px 16px; border:none; border-radius:8px; background:#0a84ff; color:white; cursor:pointer; margin-left:4px;}
+    #adModal {display:none; position:fixed; left:0;top:0;width:100%;height:100%; background:rgba(0,0,0,0.8); z-index:2000; align-items:center; justify-content:center;}
+    #adModalContent {background:#111; padding:20px; border-radius:8px; text-align:center; color:white; max-width:420px; width:90%;}
+    #watchAdBtn {position:fixed; top:20px; right:20px; padding:10px 16px; background:#0a84ff; color:white; border:none; border-radius:6px; cursor:pointer; z-index:1000;}
   </style>
 </head>
 <body>
-  <!-- Başlangıç TRX Yatırma Modalı -->
+
+  <!-- Başlangıç TRX Modalı -->
   <div id="trxModal">
     <div id="trxModalContent">
       <h2>Oyuna Başlamak İçin 25 TRX Yatırın</h2>
@@ -158,7 +48,6 @@
     </div>
     <canvas id="gameCanvas"></canvas>
 
-    <!-- Çekim Sistemi -->
     <div id="withdraw">
       <input id="walletAddress" type="text" placeholder="FaucetPay / TronLink adresinizi girin">
       <br>
@@ -176,11 +65,10 @@
     </div>
   </div>
 
-  <!-- Sağ üstte Reklamı İzle butonu -->
   <button id="watchAdBtn">Reklamı İzle</button>
 
   <script>
-    // Oyun ve taş mantığı
+    // Canvas ve oyun değişkenleri
     const canvas = document.getElementById("gameCanvas");
     const ctx = canvas.getContext("2d");
     canvas.width = window.innerWidth > 600 ? 480 : window.innerWidth * 0.9;
@@ -200,15 +88,35 @@
     images.gold.src = "gold.png";
     images.red.src = "red.png";
 
+    // Taş oluşturma ve düşürme
+    let rocks = [];
+    let lastSpawn = 0;
+
     class Rock {
-      constructor(type){ this.type=type; this.size=window.innerWidth>600?60:40; this.x=Math.random()*(canvas.width-this.size); this.y=-this.size; this.speed=Math.random()*2+1; }
-      update(){ this.y+=this.speed; }
-      draw(){ ctx.drawImage(images[this.type],this.x,this.y,this.size,this.size); }
+      constructor(type){
+        this.type = type;
+        this.size = window.innerWidth > 600 ? 60 : 40;
+        this.x = Math.random() * (canvas.width - this.size);
+        this.y = -this.size;
+        this.speed = Math.random() * 2 + 1;
+      }
+      update(){ this.y += this.speed; }
+      draw(){ ctx.drawImage(images[this.type], this.x, this.y, this.size, this.size); }
     }
 
-    let rocks=[]; let lastSpawn=0;
-    function spawnRock(){ let r=Math.random(); let type="stone"; if(r<0.70) type="stone"; else if(r<0.85) type="silver"; else if(r<0.95) type="gold"; else type="red"; rocks.push(new Rock(type)); }
+    // Güncellenmiş spawnRock() fonksiyonu (entegre edilmiş)
+    function spawnRock() {
+      let r = Math.random();
+      let type = "stone";
+      if(r < 0.70) type = "stone";       // Stone %70
+      else if(r < 0.90) type = "silver"; // Silver %20
+      else if(r < 0.92) type = "gold";   // Gold %2 (çok nadir)
+      else type = "red";                  // Red %8 (daha sık)
 
+      rocks.push(new Rock(type));
+    }
+
+    // Canvas click event
     canvas.addEventListener("click",(e)=>{
       if(!gameStarted) return;
       const rect=canvas.getBoundingClientRect();
@@ -227,20 +135,22 @@
 
     function update(){
       if(!gameStarted) return;
-      let now=Date.now();
-      let delta=(now-lastUpdate)/1000;
-      lastUpdate=now;
-      mevcutKazim+=kazimGucu*delta*0.01;
+      let now = Date.now();
+      let delta = (now - lastUpdate)/1000;
+      lastUpdate = now;
+      mevcutKazim += kazimGucu * delta * 0.01;
       rocks.forEach(r=>r.update());
-      rocks=rocks.filter(r=>r.y<canvas.height);
-      if(Date.now()-lastSpawn>1000){spawnRock(); lastSpawn=Date.now();}
+      rocks = rocks.filter(r=>r.y < canvas.height);
+      if(Date.now()-lastSpawn>1000){ spawnRock(); lastSpawn = Date.now();}
     }
+
     function draw(){
       ctx.clearRect(0,0,canvas.width,canvas.height);
       rocks.forEach(r=>r.draw());
-      kazimGucuEl.textContent=kazimGucu.toFixed(10);
-      mevcutKazimEl.textContent=mevcutKazim.toFixed(10);
+      kazimGucuEl.textContent = kazimGucu.toFixed(10);
+      mevcutKazimEl.textContent = mevcutKazim.toFixed(10);
     }
+
     function loop(){ update(); draw(); requestAnimationFrame(loop); }
 
     // Çekim Sistemi

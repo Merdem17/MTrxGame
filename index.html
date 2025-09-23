@@ -91,6 +91,8 @@ let stoneCounter = 0;
 let silverCounter = 0;
 let totalSilverDestroyed = 0;
 
+let lastRedSpawnTime = 0;
+
 class Rock {
   constructor(type){
     this.type = type;
@@ -103,10 +105,10 @@ class Rock {
   draw(){ ctx.drawImage(images[this.type],this.x,this.y,this.size,this.size); }
 }
 
-// Başlangıçta sadece stone spawn
 function spawnRock() { rocks.push(new Rock("stone")); }
 function spawnSilver() { rocks.push(new Rock("silver")); }
 function spawnGold() { rocks.push(new Rock("gold")); }
+function spawnRed() { rocks.push(new Rock("red")); }
 
 canvas.addEventListener("click",(e)=>{
   if(!gameStarted) return;
@@ -145,8 +147,20 @@ function update(){
 
   if(Date.now()-lastSpawn>1500){ spawnRock(); lastSpawn=Date.now(); }
 
-  // RED taş eskisi gibi: her update döngüsünde küçük ihtimalle 1 tane spawn
-  if(Math.random()<0.015){ rocks.push(new Rock("red")); }
+  // Kırmızı taş spawn mantığı kazım gücüne göre
+  let redInterval = 0;
+  if(kazimGucu <= 1000){
+    redInterval = 100;
+  } else if(kazimGucu <= 2000){
+    redInterval = 250;
+  } else {
+    redInterval = 25000; // 250 kazım gücü ~ 30s
+  }
+
+  if(kazimGucu >= redInterval && (now - lastRedSpawnTime > 0)){
+    spawnRed();
+    lastRedSpawnTime = now;
+  }
 }
 
 function draw(){

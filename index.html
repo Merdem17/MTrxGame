@@ -98,15 +98,21 @@ let totalSilverDestroyed = 0;
 
 let lastRedSpawnTime = 0;
 
+// Global taş hızı ve spawn interval
+let globalRockSpeed = 2;
+let baseSpawnInterval = 1500;
+let spawnInterval = baseSpawnInterval;
+
 class Rock {
   constructor(type){
     this.type = type;
     this.size = window.innerWidth>600?60:40;
     this.x = Math.random()*(canvas.width-this.size);
     this.y = -this.size;
-    this.speed = Math.random()*2+1;
   }
-  update(){ this.y += this.speed; }
+  update(){ 
+    this.y += globalRockSpeed;
+  }
   draw(){ ctx.drawImage(images[this.type],this.x,this.y,this.size,this.size); }
 }
 
@@ -145,16 +151,26 @@ function update(){
   if(!gameStarted) return;
   let now = Date.now();
   let delta = (now-lastUpdate)/1000;
-  lastUpdate=now;
+  lastUpdate = now;
 
   mevcutKazim += kazimGucu*delta*0.01;
+
+  // Kazım gücüne bağlı global hız artışı (yavaş artış)
+  globalRockSpeed = 2 + kazimGucu/5000; 
+
+  // Kazım gücüne bağlı spawn hızı
+  spawnInterval = Math.max(500, baseSpawnInterval - kazimGucu/10); 
+
+  if(now-lastSpawn > spawnInterval){ 
+    spawnRock(); 
+    lastSpawn = now; 
+  }
+
   rocks.forEach(r=>r.update());
   rocks = rocks.filter(r=>r.y<canvas.height);
 
-  if(Date.now()-lastSpawn>1500){ spawnRock(); lastSpawn=Date.now(); }
-
-  // Kırmızı taş spawn düzeltildi (zaman tabanlı)
-  let redSpawnFrequency = kazimGucu < 1000 ? 15000 : kazimGucu < 2000 ? 10000 : 5000; // ms
+  // Kırmızı taş spawn düzeltildi
+  let redSpawnFrequency = kazimGucu < 1000 ? 15000 : kazimGucu < 2000 ? 10000 : 5000;
   if(now - lastRedSpawnTime > redSpawnFrequency){
     spawnRed();
     lastRedSpawnTime = now;

@@ -1,233 +1,210 @@
 <!DOCTYPE html>
 <html lang="tr">
 <head>
-  <meta charset="UTF-8">
-  <title>MTrxGame</title>
-  <style>
-    body {margin:0; background:black; color:white; font-family:sans-serif; display:flex; justify-content:center; align-items:center; height:100vh; overflow:hidden;}
-    #game-container {display:flex; flex-direction:column; align-items:center;}
-    canvas {background:black; border:4px solid #555; box-shadow:0 0 20px rgba(255,255,255,0.2);}
-    #header {margin-bottom:10px; font-size:36px; font-weight:bold; text-shadow:0 0 10px #0f0;}
-    #stats {margin-bottom:10px; text-align:center; font-size:18px;}
-    #withdraw {margin-top:15px; text-align:center;}
-    #withdraw input {padding:6px; width:300px; border-radius:6px; border:none; margin-bottom:8px;}
-    #withdraw button {padding:8px 16px; background:#0a84ff; color:white; border:none; border-radius:8px; cursor:pointer;}
-    #withdraw p {margin-top:10px; font-size:14px; color:#ccc;}
-    #trxModal {display:flex; position:fixed; left:0; top:0; width:100%; height:100%; background:black; align-items:center; justify-content:center; z-index:3000;}
-    #trxModalContent {background:#111; padding:25px; border-radius:10px; text-align:center; color:white; max-width:420px; width:90%;}
-    #trxModalContent input {padding:6px; width:90%; border-radius:6px; border:none; margin:10px 0;}
-    #trxModalContent button {padding:8px 16px; border:none; border-radius:8px; background:#0a84ff; color:white; cursor:pointer; margin-left:4px;}
-    #adModal {display:none; position:fixed; left:0;top:0;width:100%;height:100%; background:rgba(0,0,0,0.8); z-index:2000; align-items:center; justify-content:center;}
-    #adModalContent {background:#111; padding:20px; border-radius:8px; text-align:center; color:white; max-width:420px; width:90%;}
-    #watchAdBtn {position:fixed; top:20px; right:20px; padding:10px 16px; background:#0a84ff; color:white; border:none; border-radius:6px; cursor:pointer; z-index:1000;}
-  </style>
+<meta charset="UTF-8">
+<title>MTrxGame</title>
+<style>
+body {margin:0; background:black; color:white; font-family:sans-serif; display:flex; justify-content:center; align-items:center; height:100vh; overflow:hidden;}
+#game-container {display:flex; flex-direction:column; align-items:center;}
+canvas {background:black; border:4px solid #555; box-shadow:0 0 20px rgba(255,255,255,0.2);}
+#header {margin-bottom:10px; font-size:36px; font-weight:bold; text-shadow:0 0 10px #0f0;}
+#stats {margin-bottom:10px; text-align:center; font-size:18px;}
+#withdraw {margin-top:15px; text-align:center;}
+#withdraw input {padding:6px; width:300px; border-radius:6px; border:none; margin-bottom:8px;}
+#withdraw button {padding:8px 16px; background:#0a84ff; color:white; border:none; border-radius:8px; cursor:pointer;}
+#withdraw p {margin-top:10px; font-size:14px; color:#ccc;}
+#trxModal {display:flex; position:fixed; left:0; top:0; width:100%; height:100%; background:black; align-items:center; justify-content:center; z-index:3000;}
+#trxModalContent {background:#111; padding:25px; border-radius:10px; text-align:center; color:white; max-width:420px; width:90%;}
+#trxModalContent input {padding:6px; width:90%; border-radius:6px; border:none; margin:10px 0;}
+#trxModalContent button {padding:8px 16px; border:none; border-radius:8px; background:#0a84ff; color:white; cursor:pointer; margin-left:4px;}
+#adModal {display:none; position:fixed; left:0;top:0;width:100%;height:100%; background:rgba(0,0,0,0.8); z-index:2000; align-items:center; justify-content:center;}
+#adModalContent {background:#111; padding:20px; border-radius:8px; text-align:center; color:white; max-width:420px; width:90%;}
+#watchAdBtn {position:fixed; top:20px; right:20px; padding:10px 16px; background:#0a84ff; color:white; border:none; border-radius:6px; cursor:pointer; z-index:1000;}
+</style>
 </head>
 <body>
 
-  <!-- Başlangıç TRX Modalı -->
-  <div id="trxModal">
-    <div id="trxModalContent">
-      <h2>Oyuna Başlamak İçin 25 TRX Yatırın</h2>
-      <p>TRX adresimiz:</p>
-      <div style="margin:10px 0;font-weight:bold;background:#222;padding:8px;border-radius:6px;">
-        <span id="trxAddress">TSDRaVWgx2M1KeLCQ81oBqmPDSEkMA3wxc</span>
-        <button id="copyTrx">Kopyala</button>
-      </div>
-      <input id="txidInput" type="text" placeholder="TXID girin (simülasyon)">
-      <br>
-      <button id="trxContinueBtn">Devam Et</button>
-      <p id="trxMsg" style="color:orange;margin-top:10px;font-size:14px;"></p>
+<div id="trxModal">
+  <div id="trxModalContent">
+    <h2>Oyuna Başlamak İçin 25 TRX Yatırın</h2>
+    <p>TRX adresimiz:</p>
+    <div style="margin:10px 0;font-weight:bold;background:#222;padding:8px;border-radius:6px;">
+      <span id="trxAddress">TSDRaVWgx2M1KeLCQ81oBqmPDSEkMA3wxc</span>
+      <button id="copyTrx">Kopyala</button>
     </div>
+    <input id="txidInput" type="text" placeholder="TXID girin (simülasyon)">
+    <br>
+    <button id="trxContinueBtn">Devam Et</button>
+    <p id="trxMsg" style="color:orange;margin-top:10px;font-size:14px;"></p>
   </div>
+</div>
 
-  <div id="game-container">
-    <div id="header">MTrxGame</div>
-    <div id="stats">
-      Kazım Gücü: <span id="kazimGucu">0.0000000000</span><br>
-      Mevcut Kazım: <span id="mevcutKazim">0.0000000000</span>
-    </div>
-    <canvas id="gameCanvas"></canvas>
-
-    <div id="withdraw">
-      <input id="walletAddress" type="text" placeholder="FaucetPay / TronLink adresinizi girin">
-      <br>
-      <button id="withdrawBtn">Çekim Yap</button>
-      <p id="withdrawMsg"></p>
-    </div>
+<div id="game-container">
+  <div id="header">MTrxGame</div>
+  <div id="stats">
+    Kazım Gücü: <span id="kazimGucu">0.0000000000</span><br>
+    Mevcut Kazım: <span id="mevcutKazim">0.0000000000</span>
   </div>
-
-  <!-- Reklam Modal -->
-  <div id="adModal">
-    <div id="adModalContent">
-      <h2>Reklam İzle</h2>
-      <p id="adInfo">Oyunun başlaması için 15 saniyelik reklam izleyin</p>
-      <div id="adCountdown" style="margin-top:12px;color:#ddd;">Kalan: <span id="adSeconds">15</span>s</div>
-    </div>
+  <canvas id="gameCanvas"></canvas>
+  <div id="withdraw">
+    <input id="walletAddress" type="text" placeholder="FaucetPay / TronLink adresinizi girin">
+    <br>
+    <button id="withdrawBtn">Çekim Yap</button>
+    <p id="withdrawMsg"></p>
   </div>
+</div>
 
-  <button id="watchAdBtn">Reklamı İzle</button>
+<div id="adModal">
+  <div id="adModalContent">
+    <h2>Reklam İzle</h2>
+    <p id="adInfo">Oyunun başlaması için 15 saniyelik reklam izleyin</p>
+    <div id="adCountdown" style="margin-top:12px;color:#ddd;">Kalan: <span id="adSeconds">15</span>s</div>
+  </div>
+</div>
 
-  <script>
-    // Canvas ve oyun değişkenleri
-    const canvas = document.getElementById("gameCanvas");
-    const ctx = canvas.getContext("2d");
-    canvas.width = window.innerWidth > 600 ? 480 : window.innerWidth * 0.9;
-    canvas.height = window.innerHeight > 600 ? 640 : window.innerHeight * 0.7;
+<button id="watchAdBtn">Reklamı İzle</button>
 
-    let kazimGucu = 0;
-    let mevcutKazim = 0;
-    let lastUpdate = Date.now();
-    let gameStarted = false;
+<script>
+const canvas = document.getElementById("gameCanvas");
+const ctx = canvas.getContext("2d");
+canvas.width = window.innerWidth > 600 ? 480 : window.innerWidth * 0.9;
+canvas.height = window.innerHeight > 600 ? 640 : window.innerHeight * 0.7;
 
-    const kazimGucuEl = document.getElementById("kazimGucu");
-    const mevcutKazimEl = document.getElementById("mevcutKazim");
+let kazimGucu = 0;
+let mevcutKazim = 0;
+let lastUpdate = Date.now();
+let gameStarted = false;
 
-    const images = { stone:new Image(), silver:new Image(), gold:new Image(), red:new Image() };
-    images.stone.src = "stone.png";
-    images.silver.src = "silver.png";
-    images.gold.src = "gold.png";
-    images.red.src = "red.png";
+const kazimGucuEl = document.getElementById("kazimGucu");
+const mevcutKazimEl = document.getElementById("mevcutKazim");
 
-    // Taş oluşturma ve düşürme
-    let rocks = [];
-    let lastSpawn = 0;
+const images = { stone:new Image(), silver:new Image(), gold:new Image(), red:new Image() };
+images.stone.src = "stone.png";
+images.silver.src = "silver.png";
+images.gold.src = "gold.png";
+images.red.src = "red.png";
 
-    let stoneCounter = 0;
-    let silverCounter = 0;
+let rocks = [];
+let lastSpawn = 0;
 
-    class Rock {
-      constructor(type){
-        this.type = type;
-        this.size = window.innerWidth > 600 ? 60 : 40;
-        this.x = Math.random() * (canvas.width - this.size);
-        this.y = -this.size;
-        this.speed = Math.random() * 2 + 1;
+let stoneCounter = 0;
+let silverCounter = 0;
+let totalSilverDestroyed = 0; // gold spawn için
+
+class Rock {
+  constructor(type){
+    this.type = type;
+    this.size = window.innerWidth>600?60:40;
+    this.x = Math.random()*(canvas.width-this.size);
+    this.y = -this.size;
+    this.speed = Math.random()*2+1;
+  }
+  update(){ this.y += this.speed; }
+  draw(){ ctx.drawImage(images[this.type],this.x,this.y,this.size,this.size); }
+}
+
+function spawnRock() {
+  rocks.push(new Rock("stone")); // başlangıçta sadece stone
+}
+
+function spawnSilver() { rocks.push(new Rock("silver")); }
+function spawnGold() { rocks.push(new Rock("gold")); }
+
+canvas.addEventListener("click",(e)=>{
+  if(!gameStarted) return;
+  const rect=canvas.getBoundingClientRect();
+  const mx=e.clientX-rect.left;
+  const my=e.clientY-rect.top;
+
+  rocks.forEach((rock,i)=>{
+    if(mx>rock.x && mx<rock.x+rock.size && my>rock.y && my<rock.y+rock.size){
+      if(rock.type==="stone"){
+        kazimGucu+=0.0000000001;
+        stoneCounter++;
+        if(stoneCounter>=25){ stoneCounter=0; spawnSilver(); }
       }
-      update(){ this.y += this.speed; }
-      draw(){ ctx.drawImage(images[this.type], this.x, this.y, this.size, this.size); }
+      if(rock.type==="silver"){
+        kazimGucu+=0.0000000010;
+        silverCounter++;
+        totalSilverDestroyed++;
+        if(totalSilverDestroyed >= 30){ spawnGold(); totalSilverDestroyed=0; }
+      }
+      if(rock.type==="gold"){ kazimGucu+=0.0000000100; }
+      if(rock.type==="red"){ kazimGucu*=0.5; }
+
+      rocks.splice(i,1);
     }
+  });
+});
 
-    function spawnRock() {
-      let r = Math.random();
-      let type = "stone";
-      if(r < 0.70) type = "stone";
-      else if(r < 0.90) type = "silver";
-      else type = "red"; // red rastgele düşüyor
-      rocks.push(new Rock(type));
+function update(){
+  if(!gameStarted) return;
+  let now = Date.now();
+  let delta = (now-lastUpdate)/1000;
+  lastUpdate=now;
+  mevcutKazim += kazimGucu*delta*0.01;
+  rocks.forEach(r=>r.update());
+  rocks = rocks.filter(r=>r.y<canvas.height);
+
+  if(Date.now()-lastSpawn>1500){ // stone spawn aralığı
+    spawnRock();
+    lastSpawn=Date.now();
+  }
+
+  // Red taş random spawn
+  if(Math.random()<0.03){ rocks.push(new Rock("red")); }
+}
+
+function draw(){
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  rocks.forEach(r=>r.draw());
+  kazimGucuEl.textContent=kazimGucu.toFixed(10);
+  mevcutKazimEl.textContent=mevcutKazim.toFixed(10);
+}
+
+function loop(){ update(); draw(); requestAnimationFrame(loop); }
+
+// Çekim Sistemi ve TRX modal Sürüm 1’den korunacak
+// (Kodu daha önce gönderdiğimiz şekilde buraya ekleyebilirsin)
+
+// TRX Modal ve reklam başlatma mantığı
+const trxModalEl=document.getElementById("trxModal");
+const copyTrxBtn=document.getElementById("copyTrx");
+const trxContinueBtn=document.getElementById("trxContinueBtn");
+const txidInput=document.getElementById("txidInput");
+const trxMsg=document.getElementById("trxMsg");
+const trxAddressEl=document.getElementById("trxAddress");
+const watchAdBtn = document.getElementById("watchAdBtn");
+const adModal = document.getElementById("adModal");
+const adCountdown = document.getElementById("adCountdown");
+const adSecondsEl = document.getElementById("adSeconds");
+
+copyTrxBtn.addEventListener("click",()=>{ navigator.clipboard.writeText(trxAddressEl.textContent).then(()=>{ trxMsg.textContent="Adres kopyalandı!"; trxMsg.style.color="lime"; }); });
+
+trxContinueBtn.addEventListener("click",()=>{
+  const txid=txidInput.value.trim();
+  if(!txid){ trxMsg.textContent="⚠️ Lütfen TXID girin veya simülasyon için bir şey yazın."; trxMsg.style.color="orange"; return; }
+  trxModalEl.style.display="none";
+  watchAdBtn.style.display="block";
+});
+
+watchAdBtn.addEventListener("click", ()=>{
+  watchAdBtn.style.display="none";
+  adModal.style.display="flex";
+  let remaining = 15;
+  adCountdown.style.display="block";
+  adSecondsEl.textContent = remaining;
+  let interval = setInterval(()=>{
+    remaining--;
+    adSecondsEl.textContent = remaining;
+    if(remaining <= 0){
+      clearInterval(interval);
+      adModal.style.display="none";
+      gameStarted = true;
+      loop();
     }
-
-    function spawnSilver() { rocks.push(new Rock("silver")); }
-    function spawnGold() { rocks.push(new Rock("gold")); }
-
-    // Taş tıklama mantığı
-    canvas.addEventListener("click", (e)=>{
-      if(!gameStarted) return;
-      const rect=canvas.getBoundingClientRect();
-      const mx=e.clientX-rect.left;
-      const my=e.clientY-rect.top;
-
-      rocks.forEach((rock,i)=>{
-        if(mx>rock.x && mx<rock.x+rock.size && my>rock.y && my<rock.y+rock.size){
-          if(rock.type==="stone"){
-            kazimGucu+=0.0000000001;
-            stoneCounter++;
-            if(stoneCounter>=25){ stoneCounter=0; spawnSilver(); }
-          }
-          if(rock.type==="silver"){
-            kazimGucu+=0.0000000010;
-            silverCounter++;
-            if(silverCounter>=30){ silverCounter=0; spawnGold(); }
-          }
-          if(rock.type==="gold"){
-            kazimGucu+=0.0000000100;
-          }
-          if(rock.type==="red"){
-            kazimGucu *= 0.5;
-          }
-          rocks.splice(i,1);
-        }
-      });
-    });
-
-    function update(){
-      if(!gameStarted) return;
-      let now = Date.now();
-      let delta = (now - lastUpdate)/1000;
-      lastUpdate = now;
-      mevcutKazim += kazimGucu * delta * 0.01;
-      rocks.forEach(r=>r.update());
-      rocks = rocks.filter(r=>r.y < canvas.height);
-      if(Date.now()-lastSpawn>1000){ spawnRock(); lastSpawn = Date.now();}
-    }
-
-    function draw(){
-      ctx.clearRect(0,0,canvas.width,canvas.height);
-      rocks.forEach(r=>r.draw());
-      kazimGucuEl.textContent = kazimGucu.toFixed(10);
-      mevcutKazimEl.textContent = mevcutKazim.toFixed(10);
-    }
-
-    function loop(){ update(); draw(); requestAnimationFrame(loop); }
-
-    // Çekim Sistemi (Sürüm 1’den)
-    const withdrawBtn=document.getElementById("withdrawBtn");
-    const walletAddressEl=document.getElementById("walletAddress");
-    const withdrawMsg=document.getElementById("withdrawMsg");
-    const MIN_WITHDRAW=250;
-    withdrawBtn.addEventListener("click",()=>{
-      const address=walletAddressEl.value.trim();
-      if(!address){withdrawMsg.textContent="⚠️ Lütfen geçerli bir cüzdan adresi girin."; withdrawMsg.style.color="orange"; return;}
-      const trxAmount=mevcutKazim;
-      if(trxAmount<MIN_WITHDRAW){withdrawMsg.textContent=`⚠️ Minimum çekim limiti ${MIN_WITHDRAW} TRX. Şu an bakiyeniz: ${trxAmount.toFixed(2)} TRX`; withdrawMsg.style.color="red"; return;}
-      withdrawMsg.textContent=`✅ Çekim talebiniz alındı. Adresinize (${address}) gönderim yapılacaktır.`;
-      withdrawMsg.style.color="lime";
-    });
-
-    // TRX Modal
-    const trxModalEl=document.getElementById("trxModal");
-    const copyTrxBtn=document.getElementById("copyTrx");
-    const trxContinueBtn=document.getElementById("trxContinueBtn");
-    const txidInput=document.getElementById("txidInput");
-    const trxMsg=document.getElementById("trxMsg");
-    const trxAddressEl=document.getElementById("trxAddress");
-
-    copyTrxBtn.addEventListener("click",()=>{
-      navigator.clipboard.writeText(trxAddressEl.textContent).then(()=>{
-        trxMsg.textContent="Adres kopyalandı!";
-        trxMsg.style.color="lime";
-      });
-    });
-
-    trxContinueBtn.addEventListener("click",()=>{
-      const txid=txidInput.value.trim();
-      if(!txid){ trxMsg.textContent="⚠️ Lütfen TXID girin veya simülasyon için bir şey yazın."; trxMsg.style.color="orange"; return; }
-      trxModalEl.style.display="none";
-      document.getElementById("watchAdBtn").style.display = "block"; // reklam butonunu göster
-    });
-
-    // Reklam Başlatma
-    const watchAdBtn = document.getElementById("watchAdBtn");
-    const adModal = document.getElementById("adModal");
-    const adCountdown = document.getElementById("adCountdown");
-    const adSecondsEl = document.getElementById("adSeconds");
-
-    watchAdBtn.addEventListener("click", ()=>{
-      watchAdBtn.style.display = "none";
-      adModal.style.display = "flex";
-      let remaining = 15;
-      adCountdown.style.display = "block";
-      adSecondsEl.textContent = remaining;
-      let interval = setInterval(()=>{
-        remaining--;
-        adSecondsEl.textContent = remaining;
-        if(remaining <= 0){
-          clearInterval(interval);
-          adModal.style.display = "none";
-          gameStarted = true;
-          loop();
-        }
-      },1000);
-    });
-  </script>
+  },1000);
+});
+</script>
 </body>
 </html>

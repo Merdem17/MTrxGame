@@ -92,6 +92,9 @@
     let rocks = [];
     let lastSpawn = 0;
 
+    let stoneCounter = 0;
+    let silverCounter = 0;
+
     class Rock {
       constructor(type){
         this.type = type;
@@ -104,30 +107,43 @@
       draw(){ ctx.drawImage(images[this.type], this.x, this.y, this.size, this.size); }
     }
 
-    // Güncellenmiş spawnRock() fonksiyonu (entegre edilmiş)
     function spawnRock() {
       let r = Math.random();
       let type = "stone";
-      if(r < 0.70) type = "stone";       // Stone %70
-      else if(r < 0.90) type = "silver"; // Silver %20
-      else if(r < 0.92) type = "gold";   // Gold %2 (çok nadir)
-      else type = "red";                  // Red %8 (daha sık)
-
+      if(r < 0.70) type = "stone";
+      else if(r < 0.90) type = "silver";
+      else type = "red"; // red rastgele düşüyor
       rocks.push(new Rock(type));
     }
 
-    // Canvas click event
-    canvas.addEventListener("click",(e)=>{
+    function spawnSilver() { rocks.push(new Rock("silver")); }
+    function spawnGold() { rocks.push(new Rock("gold")); }
+
+    // Taş tıklama mantığı
+    canvas.addEventListener("click", (e)=>{
       if(!gameStarted) return;
       const rect=canvas.getBoundingClientRect();
       const mx=e.clientX-rect.left;
       const my=e.clientY-rect.top;
+
       rocks.forEach((rock,i)=>{
         if(mx>rock.x && mx<rock.x+rock.size && my>rock.y && my<rock.y+rock.size){
-          if(rock.type==="stone") kazimGucu+=0.0000000001;
-          if(rock.type==="silver") kazimGucu+=0.0000000010;
-          if(rock.type==="gold") kazimGucu+=0.0000000100;
-          if(rock.type==="red") kazimGucu*=0.5;
+          if(rock.type==="stone"){
+            kazimGucu+=0.0000000001;
+            stoneCounter++;
+            if(stoneCounter>=25){ stoneCounter=0; spawnSilver(); }
+          }
+          if(rock.type==="silver"){
+            kazimGucu+=0.0000000010;
+            silverCounter++;
+            if(silverCounter>=30){ silverCounter=0; spawnGold(); }
+          }
+          if(rock.type==="gold"){
+            kazimGucu+=0.0000000100;
+          }
+          if(rock.type==="red"){
+            kazimGucu *= 0.5;
+          }
           rocks.splice(i,1);
         }
       });
@@ -153,28 +169,30 @@
 
     function loop(){ update(); draw(); requestAnimationFrame(loop); }
 
-    // Çekim Sistemi
+    // Çekim Sistemi (Sürüm 1’den)
     const withdrawBtn=document.getElementById("withdrawBtn");
     const walletAddressEl=document.getElementById("walletAddress");
     const withdrawMsg=document.getElementById("withdrawMsg");
     const MIN_WITHDRAW=250;
     withdrawBtn.addEventListener("click",()=>{
       const address=walletAddressEl.value.trim();
-      if(!address){ withdrawMsg.textContent="⚠️ Lütfen geçerli bir cüzdan adresi girin."; withdrawMsg.style.color="orange"; return; }
+      if(!address){withdrawMsg.textContent="⚠️ Lütfen geçerli bir cüzdan adresi girin."; withdrawMsg.style.color="orange"; return;}
       const trxAmount=mevcutKazim;
-      if(trxAmount<MIN_WITHDRAW){ withdrawMsg.textContent=`⚠️ Minimum çekim limiti ${MIN_WITHDRAW} TRX. Şu an bakiyeniz: ${trxAmount.toFixed(2)} TRX`; withdrawMsg.style.color="red"; return; }
-      withdrawMsg.textContent=`✅ Çekim talebiniz alındı. Adresinize (${address}) gönderim yapılacaktır.`; withdrawMsg.style.color="lime";
+      if(trxAmount<MIN_WITHDRAW){withdrawMsg.textContent=`⚠️ Minimum çekim limiti ${MIN_WITHDRAW} TRX. Şu an bakiyeniz: ${trxAmount.toFixed(2)} TRX`; withdrawMsg.style.color="red"; return;}
+      withdrawMsg.textContent=`✅ Çekim talebiniz alındı. Adresinize (${address}) gönderim yapılacaktır.`;
+      withdrawMsg.style.color="lime";
     });
 
-    // TRX Modal Entegrasyonu
+    // TRX Modal
     const trxModalEl=document.getElementById("trxModal");
     const copyTrxBtn=document.getElementById("copyTrx");
     const trxContinueBtn=document.getElementById("trxContinueBtn");
     const txidInput=document.getElementById("txidInput");
     const trxMsg=document.getElementById("trxMsg");
+    const trxAddressEl=document.getElementById("trxAddress");
 
     copyTrxBtn.addEventListener("click",()=>{
-      navigator.clipboard.writeText(document.getElementById("trxAddress").textContent).then(()=>{
+      navigator.clipboard.writeText(trxAddressEl.textContent).then(()=>{
         trxMsg.textContent="Adres kopyalandı!";
         trxMsg.style.color="lime";
       });
@@ -184,25 +202,29 @@
       const txid=txidInput.value.trim();
       if(!txid){ trxMsg.textContent="⚠️ Lütfen TXID girin veya simülasyon için bir şey yazın."; trxMsg.style.color="orange"; return; }
       trxModalEl.style.display="none";
-      loop();
+      document.getElementById("watchAdBtn").style.display = "block"; // reklam butonunu göster
     });
 
-    // Reklam sistemi
-    const adModal = document.getElementById("adModal");
-    const adSecondsEl = document.getElementById("adSeconds");
+    // Reklam Başlatma
     const watchAdBtn = document.getElementById("watchAdBtn");
+    const adModal = document.getElementById("adModal");
+    const adCountdown = document.getElementById("adCountdown");
+    const adSecondsEl = document.getElementById("adSeconds");
 
     watchAdBtn.addEventListener("click", ()=>{
+      watchAdBtn.style.display = "none";
       adModal.style.display = "flex";
       let remaining = 15;
+      adCountdown.style.display = "block";
       adSecondsEl.textContent = remaining;
-      const interval = setInterval(()=>{
+      let interval = setInterval(()=>{
         remaining--;
         adSecondsEl.textContent = remaining;
         if(remaining <= 0){
           clearInterval(interval);
           adModal.style.display = "none";
           gameStarted = true;
+          loop();
         }
       },1000);
     });

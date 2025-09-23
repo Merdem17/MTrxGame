@@ -36,15 +36,6 @@
       text-align:center;
       font-size:18px;
     }
-    #rewardBtn {
-      margin-bottom:10px;
-      padding:8px 16px;
-      background:#222;
-      color:white;
-      border:none;
-      border-radius:8px;
-      cursor:not-allowed;
-    }
     #withdraw {
       margin-top:15px;
       text-align:center;
@@ -165,7 +156,6 @@
       Kazım Gücü: <span id="kazimGucu">0.0000000000</span><br>
       Mevcut Kazım: <span id="mevcutKazim">0.0000000000</span>
     </div>
-    <button id="rewardBtn">Reklam İzle (2x)</button>
     <canvas id="gameCanvas"></canvas>
 
     <!-- Çekim Sistemi -->
@@ -199,11 +189,10 @@
     let kazimGucu = 0;
     let mevcutKazim = 0;
     let lastUpdate = Date.now();
-    let gameStarted = false; // oyun henüz başlamadı
+    let gameStarted = false;
 
     const kazimGucuEl = document.getElementById("kazimGucu");
     const mevcutKazimEl = document.getElementById("mevcutKazim");
-    const rewardBtn = document.getElementById("rewardBtn");
 
     const images = { stone:new Image(), silver:new Image(), gold:new Image(), red:new Image() };
     images.stone.src = "stone.png";
@@ -221,7 +210,7 @@
     function spawnRock(){ let r=Math.random(); let type="stone"; if(r<0.70) type="stone"; else if(r<0.85) type="silver"; else if(r<0.95) type="gold"; else type="red"; rocks.push(new Rock(type)); }
 
     canvas.addEventListener("click",(e)=>{
-      if(!gameStarted) return; // oyun başlamadıysa tıklamaları engelle
+      if(!gameStarted) return;
       const rect=canvas.getBoundingClientRect();
       const mx=e.clientX-rect.left;
       const my=e.clientY-rect.top;
@@ -237,7 +226,7 @@
     });
 
     function update(){
-      if(!gameStarted) return; // oyun başlamadıysa update yok
+      if(!gameStarted) return;
       let now=Date.now();
       let delta=(now-lastUpdate)/1000;
       lastUpdate=now;
@@ -253,9 +242,6 @@
       mevcutKazimEl.textContent=mevcutKazim.toFixed(10);
     }
     function loop(){ update(); draw(); requestAnimationFrame(loop); }
-
-    // Reward butonunu devre dışı bırak
-    rewardBtn.addEventListener("click",()=>{ alert("Bu buton devre dışı bırakıldı."); });
 
     // Çekim Sistemi
     const withdrawBtn=document.getElementById("withdrawBtn");
@@ -287,8 +273,8 @@
     trxContinueBtn.addEventListener("click",()=>{
       const txid=txidInput.value.trim();
       if(!txid){ trxMsg.textContent="⚠️ Lütfen TXID girin veya simülasyon için bir şey yazın."; trxMsg.style.color="orange"; return; }
-      trxModalEl.style.display="none"; // oyun TRX modalından sonra açılıyor
-      loop(); // oyun döngüsü başlıyor ama tıklamalar aktif değil
+      trxModalEl.style.display="none";
+      loop();
     });
 
     // Reklam sistemi
@@ -306,11 +292,10 @@
         if(remaining <= 0){
           clearInterval(interval);
           adModal.style.display = "none";
-          gameStarted = true; // oyun başlıyor
+          gameStarted = true;
         }
       },1000);
     });
-
   </script>
 </body>
 </html>

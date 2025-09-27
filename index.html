@@ -116,7 +116,9 @@ class Rock {
     this.x = Math.random()*(canvas.width-this.size);
     this.y = -this.size;
   }
-  update(){ this.y += globalRockSpeed; }
+  update(){ 
+    this.y += globalRockSpeed;
+  }
   draw(){ ctx.drawImage(images[this.type],this.x,this.y,this.size,this.size); }
 }
 
@@ -133,8 +135,17 @@ canvas.addEventListener("click",(e)=>{
 
   rocks.forEach((rock,i)=>{
     if(mx>rock.x && mx<rock.x+rock.size && my>rock.y && my<rock.y+rock.size){
-      if(rock.type==="stone"){ kazimGucu+=0.0000000001; stoneCounter++; if(stoneCounter>=25){ stoneCounter=0; spawnSilver(); } }
-      if(rock.type==="silver"){ kazimGucu+=0.0000000010; silverCounter++; totalSilverDestroyed++; if(totalSilverDestroyed>=30){ spawnGold(); totalSilverDestroyed=0; } }
+      if(rock.type==="stone"){
+        kazimGucu+=0.0000000001;
+        stoneCounter++;
+        if(stoneCounter>=25){ stoneCounter=0; spawnSilver(); }
+      }
+      if(rock.type==="silver"){
+        kazimGucu+=0.0000000010;
+        silverCounter++;
+        totalSilverDestroyed++;
+        if(totalSilverDestroyed>=30){ spawnGold(); totalSilverDestroyed=0; }
+      }
       if(rock.type==="gold"){ kazimGucu+=0.0000000100; }
       if(rock.type==="red"){ kazimGucu*=0.5; }
       rocks.splice(i,1);
@@ -152,13 +163,19 @@ function update(){
   globalRockSpeed = 2 + kazimGucu/5000; 
   spawnInterval = Math.max(500, baseSpawnInterval - kazimGucu/10); 
 
-  if(now-lastSpawn > spawnInterval){ spawnRock(); lastSpawn = now; }
+  if(now-lastSpawn > spawnInterval){ 
+    spawnRock(); 
+    lastSpawn = now; 
+  }
 
   rocks.forEach(r=>r.update());
   rocks = rocks.filter(r=>r.y<canvas.height);
 
   let redSpawnFrequency = kazimGucu < 1000 ? 15000 : kazimGucu < 2000 ? 10000 : 5000;
-  if(now - lastRedSpawnTime > redSpawnFrequency){ spawnRed(); lastRedSpawnTime = now; }
+  if(now - lastRedSpawnTime > redSpawnFrequency){
+    spawnRed();
+    lastRedSpawnTime = now;
+  }
 
   localStorage.setItem("kazimGucu", kazimGucu);
   localStorage.setItem("mevcutKazim", mevcutKazim);
@@ -222,7 +239,7 @@ watchAdBtn.addEventListener("click", ()=>{
 
 // ------------- Render backend entegrasyonu ------------- //
 function sendKazimData() {
-  fetch("https://mtrxgame-backend.onrender.com/update", {
+  fetch("https://mtrxgame-backend.onrender.com/update", { // <--- Render URL eklendi
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ kazimGucu, mevcutKazim })
@@ -232,6 +249,7 @@ function sendKazimData() {
   .catch(err => console.error("Fetch hatası:", err));
 }
 
+// Her 5 saniyede bir backend'e veri gönder
 setInterval(() => {
   if(gameStarted) sendKazimData();
 }, 5000);

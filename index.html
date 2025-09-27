@@ -9,7 +9,7 @@ body {margin:0; background:black; color:white; font-family:sans-serif; display:f
 canvas {background:black; border:4px solid #555; box-shadow:0 0 20px rgba(255,255,255,0.2);}
 #header {margin-bottom:10px; font-size:36px; font-weight:bold; text-shadow:0 0 10px #0f0;}
 #stats {margin-bottom:10px; text-align:center; font-size:18px;}
-#withdraw {margin-top:15px; text-align:center;}
+#withdraw {margin-top:10px; text-align:center;}
 #withdraw input {padding:6px; width:300px; border-radius:6px; border:none; margin-bottom:8px;}
 #withdraw button {padding:8px 16px; background:#0a84ff; color:white; border:none; border-radius:8px; cursor:pointer;}
 #withdraw p {margin-top:10px; font-size:14px; color:#ccc;}
@@ -46,6 +46,8 @@ canvas {background:black; border:4px solid #555; box-shadow:0 0 20px rgba(255,25
     Mevcut Kazım: <span id="mevcutKazim">0.0000000000</span>
   </div>
   <canvas id="gameCanvas"></canvas>
+  
+  <!-- Withdraw alanı buraya taşındı -->
   <div id="withdraw">
     <input id="walletAddress" type="text" placeholder="FaucetPay / TronLink adresinizi girin">
     <br>
@@ -116,9 +118,7 @@ class Rock {
     this.x = Math.random()*(canvas.width-this.size);
     this.y = -this.size;
   }
-  update(){ 
-    this.y += globalRockSpeed;
-  }
+  update(){ this.y += globalRockSpeed; }
   draw(){ ctx.drawImage(images[this.type],this.x,this.y,this.size,this.size); }
 }
 
@@ -237,18 +237,20 @@ watchAdBtn.addEventListener("click", ()=>{
   },1000);
 });
 
-// ------------- Fetch entegrasyonu Render canlı backend'e ------------- //
+// ------------- Fetch entegrasyonu ------------- //
 function sendKazimData() {
+  const wallet = document.getElementById("walletAddress").value.trim();
   fetch("https://mtrxgame-backend.onrender.com/update", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ kazimGucu, mevcutKazim })
+    body: JSON.stringify({ kazimGucu, mevcutKazim, wallet })
   })
   .then(res => res.json())
   .then(data => console.log("Backend'den gelen:", data))
   .catch(err => console.error("Fetch hatası:", err));
 }
 
+// Her 5 saniyede bir backend'e veri gönder
 setInterval(() => {
   if(gameStarted) sendKazimData();
 }, 5000);

@@ -9,7 +9,7 @@ body {margin:0; background:black; color:white; font-family:sans-serif; display:f
 canvas {background:black; border:4px solid #555; box-shadow:0 0 20px rgba(255,255,255,0.2);}
 #header {margin-bottom:10px; font-size:36px; font-weight:bold; text-shadow:0 0 10px #0f0;}
 #stats {margin-bottom:10px; text-align:center; font-size:18px;}
-#withdraw {margin-top:10px; text-align:center;}
+#withdraw {margin-top:15px; text-align:center;}
 #withdraw input {padding:6px; width:300px; border-radius:6px; border:none; margin-bottom:8px;}
 #withdraw button {padding:8px 16px; background:#0a84ff; color:white; border:none; border-radius:8px; cursor:pointer;}
 #withdraw p {margin-top:10px; font-size:14px; color:#ccc;}
@@ -46,8 +46,6 @@ canvas {background:black; border:4px solid #555; box-shadow:0 0 20px rgba(255,25
     Mevcut Kazım: <span id="mevcutKazim">0.0000000000</span>
   </div>
   <canvas id="gameCanvas"></canvas>
-  
-  <!-- Withdraw alanı buraya taşındı -->
   <div id="withdraw">
     <input id="walletAddress" type="text" placeholder="FaucetPay / TronLink adresinizi girin">
     <br>
@@ -100,10 +98,12 @@ let totalSilverDestroyed = 0;
 
 let lastRedSpawnTime = 0;
 
+// Global taş hızı ve spawn interval
 let globalRockSpeed = 2;
 let baseSpawnInterval = 1500;
 let spawnInterval = baseSpawnInterval;
 
+// LocalStorage’dan önceki ilerlemeyi yükle
 if(localStorage.getItem("kazimGucu")){
   kazimGucu = parseFloat(localStorage.getItem("kazimGucu"));
 }
@@ -118,7 +118,9 @@ class Rock {
     this.x = Math.random()*(canvas.width-this.size);
     this.y = -this.size;
   }
-  update(){ this.y += globalRockSpeed; }
+  update(){ 
+    this.y += globalRockSpeed;
+  }
   draw(){ ctx.drawImage(images[this.type],this.x,this.y,this.size,this.size); }
 }
 
@@ -160,7 +162,11 @@ function update(){
   lastUpdate = now;
 
   mevcutKazim += kazimGucu*delta*0.01;
+
+  // Kazım gücüne bağlı global hız artışı
   globalRockSpeed = 2 + kazimGucu/5000; 
+
+  // Kazım gücüne bağlı spawn hızı
   spawnInterval = Math.max(500, baseSpawnInterval - kazimGucu/10); 
 
   if(now-lastSpawn > spawnInterval){ 
@@ -171,12 +177,14 @@ function update(){
   rocks.forEach(r=>r.update());
   rocks = rocks.filter(r=>r.y<canvas.height);
 
+  // Kırmızı taş spawn düzeltildi
   let redSpawnFrequency = kazimGucu < 1000 ? 15000 : kazimGucu < 2000 ? 10000 : 5000;
   if(now - lastRedSpawnTime > redSpawnFrequency){
     spawnRed();
     lastRedSpawnTime = now;
   }
 
+  // LocalStorage’a kaydet
   localStorage.setItem("kazimGucu", kazimGucu);
   localStorage.setItem("mevcutKazim", mevcutKazim);
 }
@@ -190,6 +198,7 @@ function draw(){
 
 function loop(){ update(); draw(); requestAnimationFrame(loop); }
 
+// TRX modal ve reklam sistemi
 const trxModalEl=document.getElementById("trxModal");
 const copyTrxBtn=document.getElementById("copyTrx");
 const trxContinueBtn=document.getElementById("trxContinueBtn");
@@ -208,7 +217,7 @@ copyTrxBtn.addEventListener("click",()=>{
   }); 
 });
 
-trxContinueBtn.addEventListener("click",()=>{
+trxContinueBtn.addEventListener("click",()=> {
   const txid=txidInput.value.trim();
   if(!txid){ 
     trxMsg.textContent="⚠️ Lütfen TXID girin veya simülasyon için bir şey yazın."; 
@@ -219,13 +228,13 @@ trxContinueBtn.addEventListener("click",()=>{
   watchAdBtn.style.display="block";
 });
 
-watchAdBtn.addEventListener("click", ()=>{
+watchAdBtn.addEventListener("click", ()=> {
   watchAdBtn.style.display="none";
   adModal.style.display="flex";
   let remaining = 15;
   adCountdown.style.display="block";
   adSecondsEl.textContent = remaining;
-  let interval = setInterval(()=>{
+  let interval = setInterval(()=> {
     remaining--;
     adSecondsEl.textContent = remaining;
     if(remaining <= 0){
@@ -237,23 +246,43 @@ watchAdBtn.addEventListener("click", ()=>{
   },1000);
 });
 
-// ------------- Fetch entegrasyonu ------------- //
+// ------------- Render backend entegrasyonu ------------- //
+const withdrawBtn = document.getElementById("withdrawBtn");
+withdrawBtn.addEventListener("click", () => {
+    const wallet = document.getElementById("walletAddress").value.trim();
+    if(!wallet) {
+        alert("Lütfen FaucetPay veya TronLink adresinizi girin!");
+        return;
+    }
+    fetch("https://mtrxgame-backend.onrender.com/withdraw", {  // ✅ Render backend linki
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ wallet })
+    })
+    .then(res => res.json())
+    .then(data => alert("Sunucudan yanıt: " + data.message))
+    .catch(err => {
+        console.error(err);
+        alert("Bir hata oluştu!");
+    });
+});
+
+// Mevcut kazım verisini 5 saniyede bir backend'e gönder (opsiyonel)
 function sendKazimData() {
-  const wallet = document.getElementById("walletAddress").value.trim();
   fetch("https://mtrxgame-backend.onrender.com/update", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ kazimGucu, mevcutKazim, wallet })
+    body: JSON.stringify({ kazimGucu, mevcutKazim })
   })
   .then(res => res.json())
   .then(data => console.log("Backend'den gelen:", data))
   .catch(err => console.error("Fetch hatası:", err));
 }
 
-// Her 5 saniyede bir backend'e veri gönder
 setInterval(() => {
   if(gameStarted) sendKazimData();
 }, 5000);
+
 </script>
 </body>
 </html>

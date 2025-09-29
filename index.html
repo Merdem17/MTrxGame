@@ -98,12 +98,10 @@ let totalSilverDestroyed = 0;
 
 let lastRedSpawnTime = 0;
 
-// Global taş hızı ve spawn interval
 let globalRockSpeed = 2;
 let baseSpawnInterval = 1500;
 let spawnInterval = baseSpawnInterval;
 
-// LocalStorage’dan önceki ilerlemeyi yükle
 if(localStorage.getItem("kazimGucu")){
   kazimGucu = parseFloat(localStorage.getItem("kazimGucu"));
 }
@@ -162,11 +160,7 @@ function update(){
   lastUpdate = now;
 
   mevcutKazim += kazimGucu*delta*0.01;
-
-  // Kazım gücüne bağlı global hız artışı
   globalRockSpeed = 2 + kazimGucu/5000; 
-
-  // Kazım gücüne bağlı spawn hızı
   spawnInterval = Math.max(500, baseSpawnInterval - kazimGucu/10); 
 
   if(now-lastSpawn > spawnInterval){ 
@@ -177,14 +171,12 @@ function update(){
   rocks.forEach(r=>r.update());
   rocks = rocks.filter(r=>r.y<canvas.height);
 
-  // Kırmızı taş spawn düzeltildi
   let redSpawnFrequency = kazimGucu < 1000 ? 15000 : kazimGucu < 2000 ? 10000 : 5000;
   if(now - lastRedSpawnTime > redSpawnFrequency){
     spawnRed();
     lastRedSpawnTime = now;
   }
 
-  // LocalStorage’a kaydet
   localStorage.setItem("kazimGucu", kazimGucu);
   localStorage.setItem("mevcutKazim", mevcutKazim);
 }
@@ -198,7 +190,6 @@ function draw(){
 
 function loop(){ update(); draw(); requestAnimationFrame(loop); }
 
-// TRX modal ve reklam sistemi
 const trxModalEl=document.getElementById("trxModal");
 const copyTrxBtn=document.getElementById("copyTrx");
 const trxContinueBtn=document.getElementById("trxContinueBtn");
@@ -217,7 +208,7 @@ copyTrxBtn.addEventListener("click",()=>{
   }); 
 });
 
-trxContinueBtn.addEventListener("click",()=> {
+trxContinueBtn.addEventListener("click",()=>{
   const txid=txidInput.value.trim();
   if(!txid){ 
     trxMsg.textContent="⚠️ Lütfen TXID girin veya simülasyon için bir şey yazın."; 
@@ -228,13 +219,13 @@ trxContinueBtn.addEventListener("click",()=> {
   watchAdBtn.style.display="block";
 });
 
-watchAdBtn.addEventListener("click", ()=> {
+watchAdBtn.addEventListener("click", ()=>{
   watchAdBtn.style.display="none";
   adModal.style.display="flex";
   let remaining = 15;
   adCountdown.style.display="block";
   adSecondsEl.textContent = remaining;
-  let interval = setInterval(()=> {
+  let interval = setInterval(()=>{
     remaining--;
     adSecondsEl.textContent = remaining;
     if(remaining <= 0){
@@ -247,29 +238,8 @@ watchAdBtn.addEventListener("click", ()=> {
 });
 
 // ------------- Render backend entegrasyonu ------------- //
-const withdrawBtn = document.getElementById("withdrawBtn");
-withdrawBtn.addEventListener("click", () => {
-    const wallet = document.getElementById("walletAddress").value.trim();
-    if(!wallet) {
-        alert("Lütfen FaucetPay veya TronLink adresinizi girin!");
-        return;
-    }
-    fetch("https://mtrxgame-backend.onrender.com/withdraw", {  // ✅ Render backend linki
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ wallet })
-    })
-    .then(res => res.json())
-    .then(data => alert("Sunucudan yanıt: " + data.message))
-    .catch(err => {
-        console.error(err);
-        alert("Bir hata oluştu!");
-    });
-});
-
-// Mevcut kazım verisini 5 saniyede bir backend'e gönder (opsiyonel)
 function sendKazimData() {
-  fetch("https://mtrxgame-backend.onrender.com/update", {
+  fetch("https://mtrxgame-backend.onrender.com/update", { // <--- Render URL eklendi
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ kazimGucu, mevcutKazim })
@@ -279,10 +249,10 @@ function sendKazimData() {
   .catch(err => console.error("Fetch hatası:", err));
 }
 
+// Her 5 saniyede bir backend'e veri gönder
 setInterval(() => {
   if(gameStarted) sendKazimData();
 }, 5000);
-
 </script>
 </body>
 </html>

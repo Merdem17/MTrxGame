@@ -2,29 +2,26 @@ const express = require("express");
 const cors = require("cors");
 
 const app = express();
-const PORT = process.env.PORT || 3000;
-
-// CORS ayarı: Her yerden gelen isteklere izin ver
 app.use(cors());
-
-// JSON body parser
 app.use(express.json());
 
-// GET endpoint (opsiyonel, test için)
+// Basit test endpointi
 app.get("/", (req, res) => {
-  res.send("MTrxGame Backend Çalışıyor!");
+  res.send("Backend çalışıyor!");
 });
 
-// POST endpoint: frontend kazım verilerini buraya gönderir
+// Kullanıcı kazım gücü güncellemesi için endpoint
 app.post("/update", (req, res) => {
-  const { kazimGucu, mevcutKazim } = req.body;
-  
-  console.log("Frontend'den gelen veri:", { kazimGucu, mevcutKazim });
-  
-  // Burada istersen verileri bir veritabanına kaydedebilirsin
-  res.json({ status: "ok", message: "Veri alındı!" });
+  const { userId, kazimGucu } = req.body;
+
+  console.log("Kazım gücü güncellendi:", userId, kazimGucu);
+
+  // Şimdilik verileri sadece logluyoruz
+  res.json({ success: true, message: "Veri alındı", userId, kazimGucu });
 });
 
+// Render için port ayarı
+const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`Sürüm2 backend simülasyonu ${PORT} portunda çalışıyor`);
 });

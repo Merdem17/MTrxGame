@@ -64,27 +64,24 @@ canvas {background:black; border:4px solid #555; box-shadow:0 0 20px rgba(255,25
 
 <button id="watchAdBtn">Reklamı İzle</button>
 
-<!-- Firebase SDK -->
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+<script type="module">
+// Firebase başlat
+import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
+import { getDatabase, ref, set, get } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
 
-<script>
-// Firebase config
 const firebaseConfig = {
   apiKey: "AIzaSyCLdNeOUq6j7ZkyMp2y6zs0BHg2K-cDYe0",
   authDomain: "mtrxgame-dfed9.firebaseapp.com",
   databaseURL: "https://mtrxgame-dfed9-default-rtdb.firebaseio.com",
   projectId: "mtrxgame-dfed9",
-  storageBucket: "mtrxgame-dfed9.firebasestorage.app",
+  storageBucket: "mtrxgame-dfed9.appspot.com",
   messagingSenderId: "926124188081",
   appId: "1:926124188081:web:5bd8383fd682e9eae9dd90"
 };
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
 
-// Initialize Firebase
-firebase.initializeApp(firebaseConfig);
-const database = firebase.database();
-
-// DOM Elements
+// Canvas ve oyun değişkenleri
 const canvas = document.getElementById("gameCanvas");
 const ctx = canvas.getContext("2d");
 canvas.width = window.innerWidth > 600 ? 480 : window.innerWidth * 0.9;
@@ -95,8 +92,8 @@ window.addEventListener("resize", () => {
   canvas.height = window.innerHeight > 600 ? 640 : window.innerHeight * 0.7;
 });
 
-let kazimGucu = 0;
-let mevcutKazim = 0;
+let kazimGucu = parseFloat(localStorage.getItem("kazimGucu")) || 0;
+let mevcutKazim = parseFloat(localStorage.getItem("mevcutKazim")) || 0;
 let lastUpdate = Date.now();
 let gameStarted = false;
 
@@ -111,45 +108,11 @@ images.red.src = "red.png";
 
 let rocks = [];
 let lastSpawn = 0;
-
-let stoneCounter = 0;
-let silverCounter = 0;
-let totalSilverDestroyed = 0;
-
+let stoneCounter = 0, silverCounter = 0, totalSilverDestroyed = 0;
 let lastRedSpawnTime = 0;
-
-let globalRockSpeed = 2;
 let baseSpawnInterval = 1500;
-let spawnInterval = baseSpawnInterval;
+let globalRockSpeed = 2;
 
-// LocalStorage fallback
-function loadLocalData(wallet){
-  firebase.database().ref('users/'+wallet).once('value').then(snapshot=>{
-    if(snapshot.exists()){
-      kazimGucu = snapshot.val().kazimGucu || 0;
-      mevcutKazim = snapshot.val().mevcutKazim || 0;
-    }
-    kazimGucuEl.textContent = kazimGucu.toFixed(10);
-    mevcutKazimEl.textContent = mevcutKazim.toFixed(10);
-  });
-}
-
-// Save to Firebase
-function saveToFirebase(wallet){
-  firebase.database().ref('users/'+wallet).set({
-    kazimGucu,
-    mevcutKazim
-  });
-}
-
-// Load data if wallet exists in input
-const walletInput = document.getElementById("walletAddress");
-walletInput.addEventListener("change", ()=>{
-  const wallet = walletInput.value.trim();
-  if(wallet) loadLocalData(wallet);
-});
-
-// Rock class & spawn functions
 class Rock {
   constructor(type){
     this.type = type;
@@ -157,9 +120,7 @@ class Rock {
     this.x = Math.random()*(canvas.width-this.size);
     this.y = -this.size;
   }
-  update(){ 
-    this.y += globalRockSpeed;
-  }
+  update(){ this.y += globalRockSpeed; }
   draw(){ ctx.drawImage(images[this.type],this.x,this.y,this.size,this.size); }
 }
 
@@ -173,20 +134,10 @@ canvas.addEventListener("click",(e)=>{
   const rect=canvas.getBoundingClientRect();
   const mx=e.clientX-rect.left;
   const my=e.clientY-rect.top;
-
   rocks.forEach((rock,i)=>{
     if(mx>rock.x && mx<rock.x+rock.size && my>rock.y && my<rock.y+rock.size){
-      if(rock.type==="stone"){
-        kazimGucu+=0.0000000001;
-        stoneCounter++;
-        if(stoneCounter>=25){ stoneCounter=0; spawnSilver(); }
-      }
-      if(rock.type==="silver"){
-        kazimGucu+=0.0000000010;
-        silverCounter++;
-        totalSilverDestroyed++;
-        if(totalSilverDestroyed>=30){ spawnGold(); totalSilverDestroyed=0; }
-      }
+      if(rock.type==="stone"){ kazimGucu+=0.0000000001; stoneCounter++; if(stoneCounter>=25){ stoneCounter=0; spawnSilver(); } }
+      if(rock.type==="silver"){ kazimGucu+=0.0000000010; silverCounter++; totalSilverDestroyed++; if(totalSilverDestroyed>=30){ spawnGold(); totalSilverDestroyed=0; } }
       if(rock.type==="gold"){ kazimGucu+=0.0000000100; }
       if(rock.type==="red"){ kazimGucu*=0.5; }
       rocks.splice(i,1);
@@ -200,43 +151,45 @@ function update(){
   let delta = (now-lastUpdate)/1000;
   lastUpdate = now;
 
+  // Kazım güncelleme
   mevcutKazim += kazimGucu*delta*0.01;
-  globalRockSpeed = 2 + kazimGucu/5000; 
-  spawnInterval = Math.max(500, baseSpawnInterval - kazimGucu/10); 
 
-  if(now-lastSpawn > spawnInterval){ 
-    spawnRock(); 
-    lastSpawn = now; 
-  }
+  // --- Taş hız ve spawn mantığı ---
+  globalRockSpeed = 2 + Math.sqrt(kazimGucu)/50; // hız kazım gücüne göre artıyor
+  let spawnInterval = Math.max(300, baseSpawnInterval - kazimGucu/5); // taş sıklığı artıyor
+
+  if(now-lastSpawn > spawnInterval){ spawnRock(); lastSpawn = now; }
 
   rocks.forEach(r=>r.update());
   rocks = rocks.filter(r=>r.y<canvas.height);
 
-  let redSpawnFrequency = kazimGucu < 1000 ? 15000 : kazimGucu < 2000 ? 10000 : 5000;
-  if(now - lastRedSpawnTime > redSpawnFrequency){
-    spawnRed();
-    lastRedSpawnTime = now;
-  }
+  let redSpawnFrequency = Math.max(3000, 15000 - kazimGucu*5);
+  if(now - lastRedSpawnTime > redSpawnFrequency){ spawnRed(); lastRedSpawnTime = now; }
 
-  const wallet = walletInput.value.trim();
-  if(wallet) saveToFirebase(wallet);
-
-  kazimGucuEl.textContent=kazimGucu.toFixed(10);
-  mevcutKazimEl.textContent=mevcutKazim.toFixed(10);
+  // Local storage fallback
+  localStorage.setItem("kazimGucu", kazimGucu);
+  localStorage.setItem("mevcutKazim", mevcutKazim);
 }
 
 function draw(){
   ctx.clearRect(0,0,canvas.width,canvas.height);
   rocks.forEach(r=>r.draw());
+  kazimGucuEl.textContent=kazimGucu.toFixed(10);
+  mevcutKazimEl.textContent=mevcutKazim.toFixed(10);
 }
 
 function loop(){ update(); draw(); requestAnimationFrame(loop); }
 
-// Modal & ad logic
+// Firebase ile veri kaydetme
+function saveUserData(){
+  const txidInput = document.getElementById("txidInput").value.trim() || "sim";
+  set(ref(db, 'users/' + txidInput), { kazimGucu, mevcutKazim });
+}
+
+// Modal ve buton eventleri
 const trxModalEl=document.getElementById("trxModal");
 const copyTrxBtn=document.getElementById("copyTrx");
 const trxContinueBtn=document.getElementById("trxContinueBtn");
-const txidInput=document.getElementById("txidInput");
 const trxMsg=document.getElementById("trxMsg");
 const trxAddressEl=document.getElementById("trxAddress");
 const watchAdBtn = document.getElementById("watchAdBtn");
@@ -246,20 +199,24 @@ const adSecondsEl = document.getElementById("adSeconds");
 
 copyTrxBtn.addEventListener("click",()=>{ 
   navigator.clipboard.writeText(trxAddressEl.textContent).then(()=>{ 
-    trxMsg.textContent="Adres kopyalandı!"; 
-    trxMsg.style.color="lime"; 
+    trxMsg.textContent="Adres kopyalandı!"; trxMsg.style.color="lime"; 
   }); 
 });
 
 trxContinueBtn.addEventListener("click",()=>{
-  const txid=txidInput.value.trim();
-  if(!txid){ 
-    trxMsg.textContent="⚠️ Lütfen TXID girin veya simülasyon için bir şey yazın."; 
-    trxMsg.style.color="orange"; 
-    return; 
-  }
+  const txid= document.getElementById("txidInput").value.trim();
+  if(!txid){ trxMsg.textContent="⚠️ Lütfen TXID girin veya simülasyon için bir şey yazın."; trxMsg.style.color="orange"; return; }
   trxModalEl.style.display="none";
   watchAdBtn.style.display="block";
+
+  // Kullanıcı verisini çek
+  get(ref(db, 'users/' + txid)).then((snapshot)=>{
+    if(snapshot.exists()){
+      const data = snapshot.val();
+      kazimGucu = data.kazimGucu || 0;
+      mevcutKazim = data.mevcutKazim || 0;
+    }
+  });
 });
 
 watchAdBtn.addEventListener("click", ()=>{
@@ -279,6 +236,10 @@ watchAdBtn.addEventListener("click", ()=>{
     }
   },1000);
 });
+
+// 5 saniyede bir veri kaydet
+setInterval(()=>{ if(gameStarted) saveUserData(); },5000);
+
 </script>
 </body>
 </html>

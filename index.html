@@ -95,11 +95,9 @@ let lastSpawn = 0;
 let stoneCounter = 0;
 let silverCounter = 0;
 let totalSilverDestroyed = 0;
-
 let lastRedSpawnTime = 0;
 
-let baseRockSpeed = 2;
-let globalRockSpeed = baseRockSpeed;
+let globalRockSpeed = 2;
 let baseSpawnInterval = 1500;
 let spawnInterval = baseSpawnInterval;
 
@@ -111,22 +109,37 @@ if(localStorage.getItem("mevcutKazim")){
 }
 
 class Rock {
-  constructor(type){
+  constructor(type, x){
     this.type = type;
     this.size = window.innerWidth>600?60:40;
-    this.x = Math.random()*(canvas.width-this.size);
+    this.x = x !== undefined ? x : Math.random()*(canvas.width-this.size);
     this.y = -this.size;
   }
-  update(){ 
-    this.y += globalRockSpeed;
-  }
+  update(){ this.y += globalRockSpeed; }
   draw(){ ctx.drawImage(images[this.type],this.x,this.y,this.size,this.size); }
 }
 
-function spawnRock() { rocks.push(new Rock("stone")); }
-function spawnSilver() { rocks.push(new Rock("silver")); }
-function spawnGold() { rocks.push(new Rock("gold")); }
-function spawnRed() { rocks.push(new Rock("red")); }
+// Bir seferde düşecek taş sayısını belirle
+function spawnRocks() {
+  let count = kazimGucu < 500 ? 1 : kazimGucu < 2000 ? 2 : 3;
+  let positions = [];
+  for(let i=0; i<count; i++){
+    let tries = 0;
+    let x;
+    do {
+      x = Math.random()*(canvas.width-50);
+      tries++;
+    } while(positions.some(px => Math.abs(px-x)<60) && tries<10);
+    positions.push(x);
+
+    let type = "stone";
+    if(Math.random()<0.05) type="red";
+    else if(Math.random()<0.1) type="gold";
+    else if(Math.random()<0.2) type="silver";
+
+    rocks.push(new Rock(type, x));
+  }
+}
 
 canvas.addEventListener("click",(e)=>{
   if(!gameStarted) return;
@@ -136,17 +149,8 @@ canvas.addEventListener("click",(e)=>{
 
   rocks.forEach((rock,i)=>{
     if(mx>rock.x && mx<rock.x+rock.size && my>rock.y && my<rock.y+rock.size){
-      if(rock.type==="stone"){
-        kazimGucu+=0.0000000001;
-        stoneCounter++;
-        if(stoneCounter>=25){ stoneCounter=0; spawnSilver(); }
-      }
-      if(rock.type==="silver"){
-        kazimGucu+=0.0000000010;
-        silverCounter++;
-        totalSilverDestroyed++;
-        if(totalSilverDestroyed>=30){ spawnGold(); totalSilverDestroyed=0; }
-      }
+      if(rock.type==="stone"){ kazimGucu+=0.0000000001; stoneCounter++; if(stoneCounter>=25){ stoneCounter=0; } }
+      if(rock.type==="silver"){ kazimGucu+=0.0000000010; silverCounter++; totalSilverDestroyed++; if(totalSilverDestroyed>=30){ totalSilverDestroyed=0; } }
       if(rock.type==="gold"){ kazimGucu+=0.0000000100; }
       if(rock.type==="red"){ kazimGucu*=0.5; }
       rocks.splice(i,1);
@@ -161,14 +165,12 @@ function update(){
   lastUpdate = now;
 
   mevcutKazim += kazimGucu*delta*0.01;
+  globalRockSpeed = 2 + kazimGucu/5000;
+  spawnInterval = Math.max(500, baseSpawnInterval - kazimGucu/10);
 
-  // Taş hızı ve spawn ayarları, kazım gücüne göre agresif artış
-  globalRockSpeed = baseRockSpeed + kazimGucu/1000;
-  spawnInterval = Math.max(300, baseSpawnInterval - kazimGucu/5);
-
-  if(now-lastSpawn > spawnInterval){ 
-    spawnRock(); 
-    lastSpawn = now; 
+  if(now-lastSpawn > spawnInterval){
+    spawnRocks();
+    lastSpawn = now;
   }
 
   rocks.forEach(r=>r.update());
@@ -176,7 +178,7 @@ function update(){
 
   let redSpawnFrequency = kazimGucu < 1000 ? 15000 : kazimGucu < 2000 ? 10000 : 5000;
   if(now - lastRedSpawnTime > redSpawnFrequency){
-    spawnRed();
+    rocks.push(new Rock("red"));
     lastRedSpawnTime = now;
   }
 
@@ -239,22 +241,6 @@ watchAdBtn.addEventListener("click", ()=>{
     }
   },1000);
 });
-
-// ------------- Render backend entegrasyonu (test amaçlı göz ardı edebilirsiniz) ------------- //
-function sendKazimData() {
-  fetch("https://mtrxgame-backend.onrender.com/update", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ kazimGucu, mevcutKazim })
-  })
-  .then(res => res.json())
-  .then(data => console.log("Backend'den gelen:", data))
-  .catch(err => console.error("Fetch hatası:", err));
-}
-
-setInterval(() => {
-  if(gameStarted) sendKazimData();
-}, 5000);
 </script>
 </body>
 </html>

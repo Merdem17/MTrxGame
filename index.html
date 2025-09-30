@@ -64,7 +64,27 @@ canvas {background:black; border:4px solid #555; box-shadow:0 0 20px rgba(255,25
 
 <button id="watchAdBtn">Reklamı İzle</button>
 
+<!-- Firebase SDK -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+
 <script>
+// Firebase config
+const firebaseConfig = {
+  apiKey: "AIzaSyCLdNeOUq6j7ZkyMp2y6zs0BHg2K-cDYe0",
+  authDomain: "mtrxgame-dfed9.firebaseapp.com",
+  databaseURL: "https://mtrxgame-dfed9-default-rtdb.firebaseio.com",
+  projectId: "mtrxgame-dfed9",
+  storageBucket: "mtrxgame-dfed9.firebasestorage.app",
+  messagingSenderId: "926124188081",
+  appId: "1:926124188081:web:5bd8383fd682e9eae9dd90"
+};
+
+// Initialize Firebase
+firebase.initializeApp(firebaseConfig);
+const database = firebase.database();
+
+// DOM Elements
 const canvas = document.getElementById("gameCanvas");
 const ctx = canvas.getContext("2d");
 canvas.width = window.innerWidth > 600 ? 480 : window.innerWidth * 0.9;
@@ -102,13 +122,34 @@ let globalRockSpeed = 2;
 let baseSpawnInterval = 1500;
 let spawnInterval = baseSpawnInterval;
 
-if(localStorage.getItem("kazimGucu")){
-  kazimGucu = parseFloat(localStorage.getItem("kazimGucu"));
-}
-if(localStorage.getItem("mevcutKazim")){
-  mevcutKazim = parseFloat(localStorage.getItem("mevcutKazim"));
+// LocalStorage fallback
+function loadLocalData(wallet){
+  firebase.database().ref('users/'+wallet).once('value').then(snapshot=>{
+    if(snapshot.exists()){
+      kazimGucu = snapshot.val().kazimGucu || 0;
+      mevcutKazim = snapshot.val().mevcutKazim || 0;
+    }
+    kazimGucuEl.textContent = kazimGucu.toFixed(10);
+    mevcutKazimEl.textContent = mevcutKazim.toFixed(10);
+  });
 }
 
+// Save to Firebase
+function saveToFirebase(wallet){
+  firebase.database().ref('users/'+wallet).set({
+    kazimGucu,
+    mevcutKazim
+  });
+}
+
+// Load data if wallet exists in input
+const walletInput = document.getElementById("walletAddress");
+walletInput.addEventListener("change", ()=>{
+  const wallet = walletInput.value.trim();
+  if(wallet) loadLocalData(wallet);
+});
+
+// Rock class & spawn functions
 class Rock {
   constructor(type){
     this.type = type;
@@ -177,19 +218,21 @@ function update(){
     lastRedSpawnTime = now;
   }
 
-  localStorage.setItem("kazimGucu", kazimGucu);
-  localStorage.setItem("mevcutKazim", mevcutKazim);
+  const wallet = walletInput.value.trim();
+  if(wallet) saveToFirebase(wallet);
+
+  kazimGucuEl.textContent=kazimGucu.toFixed(10);
+  mevcutKazimEl.textContent=mevcutKazim.toFixed(10);
 }
 
 function draw(){
   ctx.clearRect(0,0,canvas.width,canvas.height);
   rocks.forEach(r=>r.draw());
-  kazimGucuEl.textContent=kazimGucu.toFixed(10);
-  mevcutKazimEl.textContent=mevcutKazim.toFixed(10);
 }
 
 function loop(){ update(); draw(); requestAnimationFrame(loop); }
 
+// Modal & ad logic
 const trxModalEl=document.getElementById("trxModal");
 const copyTrxBtn=document.getElementById("copyTrx");
 const trxContinueBtn=document.getElementById("trxContinueBtn");
@@ -236,23 +279,6 @@ watchAdBtn.addEventListener("click", ()=>{
     }
   },1000);
 });
-
-// ------------- Render backend entegrasyonu ------------- //
-function sendKazimData() {
-  fetch("https://mtrxgame-backend.onrender.com/update", { 
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ kazimGucu, mevcutKazim })
-  })
-  .then(res => res.json())
-  .then(data => console.log("Backend'den gelen:", data))
-  .catch(err => console.error("Fetch hatası:", err));
-}
-
-// Her 5 saniyede bir backend'e veri gönder
-setInterval(() => {
-  if(gameStarted) sendKazimData();
-}, 5000);
 </script>
 </body>
 </html>

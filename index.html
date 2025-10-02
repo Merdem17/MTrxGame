@@ -132,10 +132,13 @@ function spawnRocks() {
     } while(positions.some(px => Math.abs(px-x)<60) && tries<10);
     positions.push(x);
 
+    // Dinamik olasılıklı taş seçimi
     let type = "stone";
-    if(Math.random()<0.05) type="red";
-    else if(Math.random()<0.1) type="gold";
-    else if(Math.random()<0.2) type="silver";
+    let redChance = Math.min(0.05 + kazimGucu / 10000, 0.3); // %5 başlar, max %30
+    let rand = Math.random();
+    if(rand < redChance) type = "red";
+    else if(rand < redChance + 0.1) type = "gold";
+    else if(rand < redChance + 0.3) type = "silver";
 
     rocks.push(new Rock(type, x));
   }

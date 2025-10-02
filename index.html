@@ -107,41 +107,20 @@ if(localStorage.getItem("mevcutKazim")){
 }
 
 class Rock {
-  constructor(type){
+  constructor(type, x){
     this.type = type;
     this.size = window.innerWidth>600?60:40;
-    this.x = Math.random()*(canvas.width-this.size);
+    this.x = x !== undefined ? x : Math.random()*(canvas.width-this.size);
     this.y = -this.size;
   }
   update(){ this.y += globalRockSpeed; }
   draw(){ ctx.drawImage(images[this.type],this.x,this.y,this.size,this.size); }
 }
 
-function spawnRock() {
-  let type = "stone";
-
-  // 1️⃣ Kırmızı taş spawn olasılığı kazım gücüne göre
-  let redChance = 0;
-  if(kazimGucu < 50) redChance = 0.05;
-  else if(kazimGucu < 100) redChance = 0.10;
-  else if(kazimGucu < 200) redChance = 0.20;
-  else redChance = 0.35;
-
-  if(Math.random() < redChance) type = "red";
-  else if(Math.random() < 0.2) type = "silver";
-  else if(Math.random() < 0.1) type = "gold";
-
-  let rock = new Rock(type);
-
-  // Üst üste taş spawn olmasın
-  let tries = 0;
-  while(rocks.some(r => Math.abs(r.x - rock.x) < rock.size) && tries < 10){
-    rock.x = Math.random()*(canvas.width - rock.size);
-    tries++;
-  }
-
-  rocks.push(rock);
-}
+function spawnRock(x) { rocks.push(new Rock("stone", x)); }
+function spawnSilver(x) { rocks.push(new Rock("silver", x)); }
+function spawnGold(x) { rocks.push(new Rock("gold", x)); }
+function spawnRed(x) { rocks.push(new Rock("red", x)); }
 
 canvas.addEventListener("click",(e)=>{
   if(!gameStarted) return;
@@ -154,13 +133,13 @@ canvas.addEventListener("click",(e)=>{
       if(rock.type==="stone"){
         kazimGucu+=0.0000000001;
         stoneCounter++;
-        if(stoneCounter>=25){ stoneCounter=0; spawnRock(); }
+        if(stoneCounter>=25){ stoneCounter=0; spawnSilver(); }
       }
       if(rock.type==="silver"){
         kazimGucu+=0.0000000010;
         silverCounter++;
         totalSilverDestroyed++;
-        if(totalSilverDestroyed>=30){ spawnRock(); totalSilverDestroyed=0; }
+        if(totalSilverDestroyed>=30){ spawnGold(); totalSilverDestroyed=0; }
       }
       if(rock.type==="gold"){ kazimGucu+=0.0000000100; }
       if(rock.type==="red"){ kazimGucu*=0.5; }
@@ -169,6 +148,7 @@ canvas.addEventListener("click",(e)=>{
   });
 });
 
+// --- Sadece update fonksiyonu değişti ---
 function update(){
   if(!gameStarted) return;
   let now = Date.now();
@@ -177,7 +157,7 @@ function update(){
 
   mevcutKazim += kazimGucu*delta*0.01;
 
-  // 2️⃣ Kazım gücüne göre hız ve spawn aralığı
+  // --- Hız ve spawn aralığı kazım gücüne göre ---
   if(kazimGucu <= 500){
     globalRockSpeed = 2;
     spawnInterval = 1500;
@@ -192,13 +172,39 @@ function update(){
     spawnInterval = 700;
   }
 
+  // --- Taş spawn: üst üste gelmeyi engelle ---
   if(now - lastSpawn > spawnInterval){
-    spawnRock();
+    let maxTries = 10;
+    let x;
+    let tries = 0;
+    do {
+      x = Math.random()*(canvas.width-50);
+      tries++;
+    } while(rocks.some(r=>Math.abs(r.x-x)<60) && tries<maxTries);
+    spawnRock(x);
     lastSpawn = now;
   }
 
   rocks.forEach(r=>r.update());
-  rocks = rocks.filter(r=>r.y < canvas.height);
+  rocks = rocks.filter(r=>r.y<canvas.height);
+
+  // --- Kırmızı taş olasılığı kazım gücüne göre ---
+  let redChance = 0.05;
+  if(kazimGucu >= 50 && kazimGucu < 100) redChance = 0.10;
+  else if(kazimGucu >= 100 && kazimGucu < 200) redChance = 0.20;
+  else if(kazimGucu >= 200) redChance = 0.35;
+
+  if(Math.random() < redChance && now - lastRedSpawnTime > 1000){
+    let maxTries = 10;
+    let x;
+    let tries = 0;
+    do {
+      x = Math.random()*(canvas.width-50);
+      tries++;
+    } while(rocks.some(r=>Math.abs(r.x-x)<60) && tries<maxTries);
+    spawnRed(x);
+    lastRedSpawnTime = now;
+  }
 
   localStorage.setItem("kazimGucu", kazimGucu);
   localStorage.setItem("mevcutKazim", mevcutKazim);

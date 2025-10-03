@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <title>MTrxGame</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <style>
 body {margin:0; background:black; color:white; font-family:sans-serif; overflow:hidden;}
 #game-container {display:flex; flex-direction:column; align-items:center;}
@@ -12,10 +13,34 @@ canvas {background:black; border:4px solid #555; box-shadow:0 0 20px rgba(255,25
 #watchAdBtn {position:fixed; top:20px; right:20px; padding:10px 16px; background:#0a84ff; color:white; border:none; border-radius:6px; cursor:pointer; z-index:1000;}
 #adModal {display:none; position:fixed; left:0;top:0;width:100%;height:100%; background:rgba(0,0,0,0.8); z-index:2000; align-items:center; justify-content:center;}
 #adModalContent {background:#111; padding:20px; border-radius:8px; text-align:center; color:white; max-width:420px; width:90%;}
+
 /* Sol Panel */
-#leftPanel {position:absolute; left:10px; top:80px; width:220px; padding:15px; background:#111; color:white; border:1px solid #444; border-radius:10px; font-size:14px;}
-#leftPanel button {width:100%; margin-top:8px; padding:8px; border-radius:6px; border:none; background:#0a84ff; color:white; cursor:pointer; font-weight:bold;}
-#leftPanel button:hover {background:#0066cc;}
+#leftPanel {
+  position: fixed;
+  left: 10px;
+  top: 80px;
+  width: 85%;
+  max-width: 250px;
+  padding: 15px;
+  background: #111;
+  color: white;
+  border: 1px solid #444;
+  border-radius: 10px;
+  font-size: 16px;
+  z-index: 1000;
+}
+#leftPanel button, #leftPanel input {
+  width: 100%;
+  padding: 12px;
+  font-size: 16px;
+  margin-top: 8px;
+  border-radius: 6px;
+  border: none;
+}
+#leftPanel button { background: #0a84ff; color:white; font-weight:bold; cursor:pointer; }
+#leftPanel button:hover { background: #0066cc; }
+
+/* Modal */
 .modal {position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.7); display:flex; align-items:center; justify-content:center;}
 .modal-content {background:#222; padding:20px; border-radius:10px; text-align:center; width:300px; color:white;}
 </style>
@@ -69,9 +94,13 @@ canvas {background:black; border:4px solid #555; box-shadow:0 0 20px rgba(255,25
 <script>
 const canvas = document.getElementById("gameCanvas");
 const ctx = canvas.getContext("2d");
-canvas.width = window.innerWidth>600?480:window.innerWidth*0.9;
-canvas.height = window.innerHeight>600?640:window.innerHeight*0.7;
-window.addEventListener("resize", ()=>{ canvas.width = window.innerWidth>600?480:window.innerWidth*0.9; canvas.height = window.innerHeight>600?640:window.innerHeight*0.7; });
+
+function resizeCanvas(){
+  canvas.width = window.innerWidth>600?480:window.innerWidth*0.9;
+  canvas.height = window.innerHeight>600?640:window.innerHeight*0.7;
+}
+window.addEventListener("resize", resizeCanvas);
+resizeCanvas();
 
 let kazimGucu = parseFloat(localStorage.getItem("kazimGucu")||"0");
 let mevcutKazim = parseFloat(localStorage.getItem("mevcutKazim")||"0");
@@ -112,10 +141,8 @@ function spawnGold(){ rocks.push(new Rock("gold")); }
 function spawnRed(){ rocks.push(new Rock("red")); }
 function getRedChance(kazim){ if(kazim<100) return 0.10; else if(kazim<500) return 0.20; else if(kazim<2500) return 0.35; else return 0.40; }
 
-canvas.addEventListener("click",(e)=>{
-  if(!gameStarted) return;
-  const rect=canvas.getBoundingClientRect();
-  const mx=e.clientX-rect.left; const my=e.clientY-rect.top;
+// Dokunmatik ve mouse click desteği
+function hitTest(mx,my){
   rocks.forEach((rock,i)=>{
     if(mx>rock.x && mx<rock.x+rock.size && my>rock.y && my<rock.y+rock.size){
       if(rock.type==="stone"){ kazimGucu+=0.0000000001; stoneCounter++; if(stoneCounter>=25){ stoneCounter=0; spawnSilver(); } }
@@ -125,7 +152,20 @@ canvas.addEventListener("click",(e)=>{
       rocks.splice(i,1);
     }
   });
+}
+
+canvas.addEventListener("click",(e)=>{
+  const rect=canvas.getBoundingClientRect();
+  hitTest(e.clientX-rect.left,e.clientY-rect.top);
 });
+canvas.addEventListener("touchstart",(e)=>{
+  const rect=canvas.getBoundingClientRect();
+  const touch = e.touches[0];
+  hitTest(touch.clientX-rect.left, touch.clientY-rect.top);
+}, {passive:false});
+
+// Çoklu dokunmayı engelle
+document.body.addEventListener('touchstart', function(e){ if(e.touches.length>1) e.preventDefault(); }, {passive:false});
 
 function update(){
   if(!gameStarted) return;
@@ -160,34 +200,48 @@ function draw(){
 
 function loop(){ update(); draw(); requestAnimationFrame(loop); }
 
-// Reklam
+// --- Reklam ---
 const watchAdBtn = document.getElementById("watchAdBtn");
 const adModal = document.getElementById("adModal");
 const adSecondsEl = document.getElementById("adSeconds");
 
 watchAdBtn.addEventListener("click", ()=>{
-  watchAdBtn.style.display="none"; adModal.style.display="flex";
-  let remaining=15;
+  watchAdBtn.style.display="none";
+  adModal.style.display="flex";
+  let remaining = 15;
   adSecondsEl.textContent = remaining;
   let interval = setInterval(()=>{
-    remaining--; adSecondsEl.textContent=remaining;
-    if(remaining<=0){ clearInterval(interval); adModal.style.display="none"; gameStarted=true; loop(); }
+    remaining--;
+    adSecondsEl.textContent = remaining;
+    if(remaining <= 0){
+      clearInterval(interval);
+      adModal.style.display="none";
+      gameStarted = true;
+      loop();
+    }
   },1000);
 });
 
-// TRX bonus
+// --- TRX Bonus / Gücü Yükselt ---
 const trxAmountInput = document.getElementById("trxAmount");
 const trxAddBtn = document.getElementById("trxAddBtn");
 const trxBonusMsg = document.getElementById("trxBonusMsg");
 
 trxAddBtn.addEventListener("click", ()=>{
   const amount = parseFloat(trxAmountInput.value);
-  if(isNaN(amount) || amount<=0){ trxBonusMsg.textContent="⚠️ Geçerli bir TRX miktarı girin."; trxBonusMsg.style.color="orange"; return; }
-  const bonus = amount*100; kazimGucu+=bonus; localStorage.setItem("kazimGucu",kazimGucu);
-  trxBonusMsg.textContent=`✅ ${amount} TRX yatırıldı. +${bonus} kazım gücü eklendi!`; trxBonusMsg.style.color="lime";
+  if(isNaN(amount) || amount<=0){
+    trxBonusMsg.textContent = "⚠️ Geçerli bir TRX miktarı girin.";
+    trxBonusMsg.style.color = "orange";
+    return;
+  }
+  const bonus = amount*100;
+  kazimGucu += bonus;
+  localStorage.setItem("kazimGucu", kazimGucu);
+  trxBonusMsg.textContent = `✅ ${amount} TRX yatırıldı. +${bonus} kazım gücü eklendi!`;
+  trxBonusMsg.style.color = "lime";
 });
 
-// Çekim
+// --- Çekim ---
 const withdrawBtn = document.getElementById("withdrawBtn");
 const withdrawModal = document.getElementById("withdrawModal");
 const withdrawClose = document.getElementById("withdrawClose");
@@ -198,8 +252,13 @@ withdrawBtn.addEventListener("click", ()=>{ withdrawModal.style.display="flex"; 
 withdrawClose.addEventListener("click", ()=>{ withdrawModal.style.display="none"; });
 withdrawConfirm.addEventListener("click", ()=>{
   const address = document.getElementById("withdrawAddress").value.trim();
-  if(address===""){ withdrawMsg.textContent="⚠️ Adres girmelisiniz."; withdrawMsg.style.color="orange"; return; }
-  withdrawMsg.textContent=`✅ Çekim talebiniz alındı. Adres: ${address}`; withdrawMsg.style.color="lime";
+  if(address===""){
+    withdrawMsg.textContent = "⚠️ Adres girmelisiniz.";
+    withdrawMsg.style.color = "orange";
+    return;
+  }
+  withdrawMsg.textContent = `✅ Çekim talebiniz alındı. Adres: ${address}`;
+  withdrawMsg.style.color = "lime";
 });
 </script>
 </body>

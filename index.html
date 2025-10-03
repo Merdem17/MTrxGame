@@ -5,55 +5,53 @@
 <title>MTrxGame</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <style>
-body {margin:0; background:black; color:white; font-family:sans-serif; overflow:hidden;}
-#game-container {display:flex; flex-direction:column; align-items:center;}
-canvas {background:black; border:4px solid #555; box-shadow:0 0 20px rgba(255,255,255,0.2);}
-#header {margin-bottom:10px; font-size:36px; font-weight:bold; text-shadow:0 0 10px #0f0;}
-#stats {margin-bottom:10px; text-align:center; font-size:18px;}
-#watchAdBtn {position:fixed; top:20px; right:20px; padding:10px 16px; background:#0a84ff; color:white; border:none; border-radius:6px; cursor:pointer; z-index:1000;}
-#adModal {display:none; position:fixed; left:0;top:0;width:100%;height:100%; background:rgba(0,0,0,0.8); z-index:2000; align-items:center; justify-content:center;}
-#adModalContent {background:#111; padding:20px; border-radius:8px; text-align:center; color:white; max-width:420px; width:90%;}
+  body {margin:0; background:black; color:white; font-family:sans-serif; overflow:hidden;}
+  #header {position:absolute; top:10px; left:50%; transform:translateX(-50%); font-size:36px; font-weight:bold; text-shadow:0 0 10px #0f0; z-index:1000;}
+  #stats {position:absolute; top:70px; left:50%; transform:translateX(-50%); text-align:center; font-size:18px; z-index:1000;}
+  canvas {display:block; background:black; width:100%; height:100%;}
 
-/* Hamburger ikon ve panel */
-#settingsBtn {
-  position: fixed;
-  top: 20px;
-  right: 20px;
-  font-size: 28px;
-  color: #0a84ff;
-  z-index: 5000;
-  cursor: pointer;
-}
-#settingsPanel {
-  position: fixed;
-  top: 0;
-  right: -260px; /* başlangıçta gizli */
-  width: 260px;
-  height: 100%;
-  background: rgba(17,17,17,0.95);
-  padding: 20px;
-  box-shadow: -2px 0 10px #000;
-  transition: right 0.3s ease;
-  z-index: 9999;
-}
-#settingsPanel.show { right: 0; }
-#settingsPanel button { width: 100%; padding: 12px; margin-top: 8px; border:none; border-radius:6px; background:#0a84ff; color:white; font-weight:bold; cursor:pointer;}
-#settingsPanel button:hover { background:#0066cc; }
-#settingsPanel input { width: 100%; padding:10px; margin-top:8px; border-radius:6px; border:none; font-size:16px;}
+  /* Hamburger ve Panel */
+  #settingsBtn {
+    position: fixed;
+    top:20px;
+    right:20px;
+    font-size:28px;
+    color:#0a84ff;
+    z-index:2000;
+    cursor:pointer;
+  }
+  #settingsPanel {
+    position: fixed;
+    top:0;
+    right:-260px;
+    width:260px;
+    height:100%;
+    background: rgba(17,17,17,0.95);
+    padding:20px;
+    box-shadow:-2px 0 10px #000;
+    transition: right 0.3s ease;
+    z-index:2500;
+  }
+  #settingsPanel.show {right:0;}
+  #settingsPanel button {width:100%; padding:12px; margin-top:8px; border:none; border-radius:6px; background:#0a84ff; color:white; font-weight:bold; cursor:pointer;}
+  #settingsPanel button:hover {background:#0066cc;}
+  #settingsPanel input {width:100%; padding:10px; margin-top:8px; border-radius:6px; border:none; font-size:16px;}
+
+  /* Modal */
+  .modal {display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); align-items:center; justify-content:center; z-index:3000;}
+  .modal-content {background:#111; padding:25px; border-radius:10px; text-align:center; color:white; max-width:420px; width:90%;}
 </style>
 </head>
 <body>
 
-<div id="game-container">
-  <div id="header">MTrxGame</div>
-  <div id="stats">
-    Kazım Gücü: <span id="kazimGucu">0.0000000000</span><br>
-    Mevcut Kazım: <span id="mevcutKazim">0.0000000000</span>
-  </div>
-  <canvas id="gameCanvas"></canvas>
+<div id="header">MTrxGame</div>
+<div id="stats">
+  Kazım Gücü: <span id="kazimGucu">0.0000000000</span><br>
+  Mevcut Kazım: <span id="mevcutKazim">0.0000000000</span>
 </div>
+<canvas id="gameCanvas"></canvas>
 
-<!-- Hamburger ve Panel -->
+<!-- Hamburger -->
 <div id="settingsBtn">☰</div>
 <div id="settingsPanel">
   <button id="closePanel">X</button>
@@ -65,7 +63,7 @@ canvas {background:black; border:4px solid #555; box-shadow:0 0 20px rgba(255,25
 </div>
 
 <!-- Çekim Modal -->
-<div id="withdrawModal" class="modal" style="display:none;">
+<div id="withdrawModal" class="modal">
   <div class="modal-content">
     <h3>Çekim Yap</h3>
     <p>Lütfen Faucetpay veya Tronlink adresinizi girin:</p>
@@ -78,19 +76,19 @@ canvas {background:black; border:4px solid #555; box-shadow:0 0 20px rgba(255,25
 </div>
 
 <!-- Reklam Modal -->
-<div id="adModal">
-  <div id="adModalContent">
+<div id="adModal" class="modal">
+  <div class="modal-content">
     <h2>Reklam İzle</h2>
-    <p id="adInfo">Oyunun başlaması için 15 saniyelik reklam izleyin</p>
+    <p>Oyunun başlaması için 15 saniyelik reklam izleyin</p>
     <div id="adCountdown" style="margin-top:12px;color:#ddd;">Kalan: <span id="adSeconds">15</span>s</div>
   </div>
 </div>
 <button id="watchAdBtn">Reklamı İzle</button>
 
 <script>
-// Canvas
 const canvas = document.getElementById("gameCanvas");
 const ctx = canvas.getContext("2d");
+
 function resizeCanvas(){
   canvas.width = window.innerWidth;
   canvas.height = window.innerHeight;
@@ -107,18 +105,38 @@ let gameStarted = false;
 const kazimGucuEl = document.getElementById("kazimGucu");
 const mevcutKazimEl = document.getElementById("mevcutKazim");
 
-// Resimler
-const images = { stone:new Image(), silver:new Image(), gold:new Image(), red:new Image() };
-images.stone.src = "stone.png"; images.silver.src = "silver.png"; images.gold.src = "gold.png"; images.red.src = "red.png";
-
 // Taşlar
+const images = { stone:new Image(), silver:new Image(), gold:new Image(), red:new Image() };
+images.stone.src="stone.png";
+images.silver.src="silver.png";
+images.gold.src="gold.png";
+images.red.src="red.png";
+
 let rocks=[], lastSpawn=0, stoneCounter=0, silverCounter=0, totalSilverDestroyed=0;
 let globalRockSpeed=2, spawnInterval=1500;
-class Rock { constructor(type){ this.type=type; this.size=window.innerWidth>600?60:40; this.x=0; this.y=-this.size; this.setPosition(); }
-  setPosition(){ let tries=0, valid=false; while(!valid && tries<50){ this.x=Math.random()*(canvas.width-this.size); valid=true; for(let r of rocks){ if(Math.abs(this.x-r.x)<this.size && Math.abs(this.y-r.y)<this.size){ valid=false; break; } } tries++; } }
+
+class Rock {
+  constructor(type){
+    this.type=type;
+    this.size=window.innerWidth>600?60:40;
+    this.x=0; this.y=-this.size;
+    this.setPosition();
+  }
+  setPosition(){
+    let tries=0, valid=false;
+    while(!valid && tries<50){
+      this.x=Math.random()*(canvas.width-this.size);
+      valid=true;
+      for(let r of rocks){
+        if(Math.abs(this.x-r.x)<this.size && Math.abs(this.y-r.y)<this.size){ valid=false; break; }
+      }
+      tries++;
+    }
+  }
   update(){ this.y+=globalRockSpeed; }
-  draw(){ ctx.drawImage(images[this.type],this.x,this.y,this.size,this.size); }
+  draw(){ ctx.drawImage(images[this.type], this.x, this.y, this.size, this.size); }
 }
+
 function spawnRock(){ rocks.push(new Rock("stone")); }
 function spawnSilver(){ rocks.push(new Rock("silver")); }
 function spawnGold(){ rocks.push(new Rock("gold")); }
@@ -139,13 +157,14 @@ function hitTest(mx,my){
 
 canvas.addEventListener("click",(e)=>{
   const rect=canvas.getBoundingClientRect();
-  hitTest(e.clientX-rect.left,e.clientY-rect.top);
+  hitTest(e.clientX-rect.left, e.clientY-rect.top);
 });
 canvas.addEventListener("touchstart",(e)=>{
   const rect=canvas.getBoundingClientRect();
-  const touch = e.touches[0];
+  const touch=e.touches[0];
   hitTest(touch.clientX-rect.left, touch.clientY-rect.top);
 }, {passive:false});
+
 document.body.addEventListener('touchstart', function(e){ if(e.touches.length>1) e.preventDefault(); }, {passive:false});
 
 function update(){
@@ -153,16 +172,21 @@ function update(){
   let now = Date.now();
   let delta = (now-lastUpdate)/1000; lastUpdate=now;
   mevcutKazim += kazimGucu*delta*0.01;
+
   if(kazimGucu<=500){ globalRockSpeed=2; spawnInterval=1500; }
   else if(kazimGucu<=2000){ globalRockSpeed=3; spawnInterval=1200; }
   else if(kazimGucu<=5000){ globalRockSpeed=4; spawnInterval=900; }
   else { globalRockSpeed=5; spawnInterval=700; }
+
   if(now-lastSpawn>spawnInterval){ if(Math.random()<getRedChance(kazimGucu)) spawnRed(); else spawnRock(); lastSpawn=now; }
+
   rocks.forEach(r=>r.update());
   rocks = rocks.filter(r=>r.y<canvas.height);
+
   localStorage.setItem("kazimGucu", kazimGucu);
   localStorage.setItem("mevcutKazim", mevcutKazim);
 }
+
 function draw(){ ctx.clearRect(0,0,canvas.width,canvas.height); rocks.forEach(r=>r.draw()); kazimGucuEl.textContent=kazimGucu.toFixed(10); mevcutKazimEl.textContent=mevcutKazim.toFixed(10); }
 function loop(){ update(); draw(); requestAnimationFrame(loop); }
 
@@ -178,40 +202,40 @@ watchAdBtn.addEventListener("click", ()=>{
   let interval = setInterval(()=>{
     remaining--;
     adSecondsEl.textContent = remaining;
-    if(remaining <= 0){ clearInterval(interval); adModal.style.display="none"; gameStarted = true; loop(); }
+    if(remaining <= 0){ clearInterval(interval); adModal.style.display="none"; gameStarted=true; loop(); }
   },1000);
 });
 
-// Hamburger panel aç/kapat
+// Hamburger
 const settingsBtn = document.getElementById("settingsBtn");
 const settingsPanel = document.getElementById("settingsPanel");
 const closePanel = document.getElementById("closePanel");
-
 settingsBtn.addEventListener("click", ()=>{ settingsPanel.classList.add("show"); });
 closePanel.addEventListener("click", ()=>{ settingsPanel.classList.remove("show"); });
 
-// TRX Bonus / Gücü Yükselt
+// Gücü Yükselt
 const trxAmountInput = document.getElementById("trxAmount");
 const trxAddBtn = document.getElementById("trxAddBtn");
 trxAddBtn.addEventListener("click", ()=>{
-  const amount = parseFloat(trxAmountInput.value);
-  if(isNaN(amount) || amount<=0){ alert("Geçerli bir TRX miktarı girin."); return; }
-  const bonus = amount*100;
-  kazimGucu += bonus;
+  const amount=parseFloat(trxAmountInput.value);
+  if(isNaN(amount)||amount<=0){ alert("Geçerli bir TRX miktarı girin."); return; }
+  const bonus=amount*100;
+  kazimGucu+=bonus;
   localStorage.setItem("kazimGucu", kazimGucu);
   alert(amount+" TRX yatırıldı. +"+bonus+" kazım gücü eklendi!");
 });
 
-// Çekim Modal
+// Çekim
 const withdrawBtn = document.getElementById("withdrawBtn");
 const withdrawModal = document.getElementById("withdrawModal");
 const withdrawClose = document.getElementById("withdrawClose");
 const withdrawConfirm = document.getElementById("withdrawConfirm");
 const withdrawMsg = document.getElementById("withdrawMsg");
-withdrawBtn.addEventListener("click", ()=>{ withdrawModal.style.display="block"; });
+
+withdrawBtn.addEventListener("click", ()=>{ withdrawModal.style.display="flex"; });
 withdrawClose.addEventListener("click", ()=>{ withdrawModal.style.display="none"; });
 withdrawConfirm.addEventListener("click", ()=>{
-  const address = document.getElementById("withdrawAddress").value.trim();
+  const address=document.getElementById("withdrawAddress").value.trim();
   if(address===""){ withdrawMsg.textContent="⚠️ Adres girmelisiniz."; withdrawMsg.style.color="orange"; return; }
   withdrawMsg.textContent=`✅ Çekim talebiniz alındı. Adres: ${address}`;
   withdrawMsg.style.color="lime";

@@ -14,7 +14,7 @@ canvas {background:black; border:4px solid #555; box-shadow:0 0 20px rgba(255,25
 #adModal {display:none; position:fixed; left:0;top:0;width:100%;height:100%; background:rgba(0,0,0,0.8); z-index:2000; align-items:center; justify-content:center;}
 #adModalContent {background:#111; padding:20px; border-radius:8px; text-align:center; color:white; max-width:420px; width:90%;}
 
-/* Sağ panel / hamburger */
+/* Hamburger ikon ve panel */
 #settingsBtn {
   position: fixed;
   top: 20px;
@@ -27,14 +27,14 @@ canvas {background:black; border:4px solid #555; box-shadow:0 0 20px rgba(255,25
 #settingsPanel {
   position: fixed;
   top: 0;
-  right: -260px;
+  right: -260px; /* başlangıçta gizli */
   width: 260px;
   height: 100%;
   background: rgba(17,17,17,0.95);
   padding: 20px;
   box-shadow: -2px 0 10px #000;
   transition: right 0.3s ease;
-  z-index: 4000;
+  z-index: 9999;
 }
 #settingsPanel.show { right: 0; }
 #settingsPanel button { width: 100%; padding: 12px; margin-top: 8px; border:none; border-radius:6px; background:#0a84ff; color:white; font-weight:bold; cursor:pointer;}
@@ -91,13 +91,9 @@ canvas {background:black; border:4px solid #555; box-shadow:0 0 20px rgba(255,25
 // Canvas
 const canvas = document.getElementById("gameCanvas");
 const ctx = canvas.getContext("2d");
-
 function resizeCanvas(){
-  const w = window.innerWidth;
-  const h = window.innerHeight;
-  const topPadding = 80;
-  canvas.width = w;
-  canvas.height = h - topPadding;
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
 }
 window.addEventListener("resize", resizeCanvas);
 resizeCanvas();
@@ -190,6 +186,7 @@ watchAdBtn.addEventListener("click", ()=>{
 const settingsBtn = document.getElementById("settingsBtn");
 const settingsPanel = document.getElementById("settingsPanel");
 const closePanel = document.getElementById("closePanel");
+
 settingsBtn.addEventListener("click", ()=>{ settingsPanel.classList.add("show"); });
 closePanel.addEventListener("click", ()=>{ settingsPanel.classList.remove("show"); });
 

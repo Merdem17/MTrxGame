@@ -2,7 +2,7 @@
 <html lang="tr">
 <head>
 <meta charset="UTF-8">
-<title>MTrxGame</title>
+<title>MTrxGame - Puanlı Sürüm</title>
 <style>
 body {
   margin: 0;
@@ -11,7 +11,7 @@ body {
   font-family: sans-serif;
   display: flex;
   justify-content: center;
-  align-items: center;
+  align-items: flex-start;
   height: 100vh;
   overflow: hidden;
 }
@@ -19,6 +19,7 @@ body {
   display: flex;
   flex-direction: column;
   align-items: center;
+  margin-left: 20px;
 }
 canvas {
   background: black;
@@ -36,183 +37,98 @@ canvas {
   text-align: center;
   font-size: 18px;
 }
-
-/* 🔹 Ayarlar (hamburger menü) */
-#settingsBtn {
-  position: fixed;
-  top: 15px;
-  right: 15px;
-  font-size: 28px;
-  background: #222;
-  color: white;
-  border: none;
-  border-radius: 6px;
-  width: 44px;
-  height: 44px;
-  cursor: pointer;
-  z-index: 2000;
-}
-
-#settingsPanel {
-  display: none;
-  position: fixed;
-  top: 70px;
-  right: 20px;
-  background: rgba(20,20,20,0.95);
-  border: 2px solid #333;
-  border-radius: 10px;
-  padding: 16px;
-  width: 260px;
-  z-index: 1500;
+#trxArea {
+  margin-bottom: 10px;
   text-align: center;
-  box-shadow: 0 0 20px rgba(0,255,255,0.2);
 }
-
-#settingsPanel input {
+#leaderboard {
+  width: 240px;
+  background: #111;
+  padding: 16px;
+  border-radius: 8px;
+  margin-left: 20px;
+  height: fit-content;
+}
+#leaderboard h3 {
+  text-align: center;
+  color: #0f0;
+}
+#leaderboard ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+#leaderboard li {
+  padding: 4px 0;
+  border-bottom: 1px solid #222;
+}
+#myRank {
+  margin-top: 12px;
   padding: 6px;
-  width: 90%;
+  background: #222;
   border-radius: 6px;
-  border: none;
-  margin: 6px 0;
+  text-align: center;
+  color: #0ff;
 }
-
-#settingsPanel button {
+button {
   padding: 8px 14px;
   background: #0a84ff;
   color: white;
   border: none;
   border-radius: 8px;
   cursor: pointer;
-  width: 90%;
-  margin: 6px 0;
-}
-
-#settingsPanel p {
-  font-size: 14px;
-  color: #ccc;
-}
-
-/* Reklam penceresi */
-#adModal {
-  display: none;
-  position: fixed;
-  left: 0;
-  top: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0,0,0,0.8);
-  z-index: 2000;
-  align-items: center;
-  justify-content: center;
-}
-#adModalContent {
-  background: #111;
-  padding: 20px;
-  border-radius: 8px;
-  text-align: center;
-  color: white;
-  max-width: 420px;
-  width: 90%;
-}
-#watchAdBtn {
-  position: fixed;
-  top: 20px;
-  right: 80px;
-  padding: 10px 16px;
-  background: #0a84ff;
-  color: white;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
-  z-index: 1000;
 }
 </style>
 </head>
 <body>
 
-<!-- 🔹 Ayarlar Butonu -->
-<button id="settingsBtn">☰</button>
-
-<!-- 🔹 Gizli Ayarlar Paneli -->
-<div id="settingsPanel">
-  <h3>Oyun Menüsü</h3>
-  <button id="withdrawBtn">Çekim Yap</button>
-  <button id="boostBtn">Gücü Yükselt</button>
-  <div id="boostArea" style="display:none; margin-top:10px;">
-    <p>TRX Gönderim Adresi:</p>
-    <div style="background:#222;padding:8px;border-radius:6px;">
-      <span id="trxAddress">TSDRaVWgx2M1KeLCQ81oBqmPDSEkMA3wxc</span>
-    </div>
-    <p>Her 1 TRX = +100 Güç</p>
-  </div>
-  <div id="withdrawArea" style="display:none; margin-top:10px;">
-    <input id="walletAddress" type="text" placeholder="FaucetPay / TronLink adresinizi girin">
-    <p>Minimum çekim: 250 TRX</p>
-  </div>
-</div>
-
-<!-- 🔹 Oyun Alanı -->
 <div id="game-container">
   <div id="header">MTrxGame</div>
-  <div id="stats">
-    Kazım Gücü: <span id="kazimGucu">0.0000000000</span><br>
-    Mevcut Kazım: <span id="mevcutKazim">0.0000000000</span>
+  <div id="trxArea">
+    <button id="startGameBtn">25 TRX Yatır ve Oyuna Başla</button>
+  </div>
+  <div id="stats" style="display:none;">
+    Toplam Puan: <span id="puan">0</span>
   </div>
   <canvas id="gameCanvas"></canvas>
 </div>
 
-<!-- 🔹 Reklam Penceresi -->
-<div id="adModal">
-  <div id="adModalContent">
-    <h2>Reklam İzle</h2>
-    <p id="adInfo">Oyunun başlaması için 15 saniyelik reklam izleyin</p>
-    <div id="adCountdown" style="margin-top:12px;color:#ddd;">Kalan: <span id="adSeconds">15</span>s</div>
-  </div>
+<div id="leaderboard">
+  <h3>Leaderboard</h3>
+  <ul id="topList"></ul>
+  <div id="myRank"></div>
 </div>
-
-<button id="watchAdBtn">Reklamı İzle</button>
 
 <script>
 const canvas = document.getElementById("gameCanvas");
 const ctx = canvas.getContext("2d");
-canvas.width = window.innerWidth > 600 ? 480 : window.innerWidth * 0.9;
-canvas.height = window.innerHeight > 600 ? 640 : window.innerHeight * 0.7;
+canvas.width = window.innerWidth > 800 ? 480 : window.innerWidth*0.6;
+canvas.height = window.innerHeight > 600 ? 640 : window.innerHeight*0.7;
 
-window.addEventListener("resize", () => {
-  canvas.width = window.innerWidth > 600 ? 480 : window.innerWidth * 0.9;
-  canvas.height = window.innerHeight > 600 ? 640 : window.innerHeight * 0.7;
+window.addEventListener("resize", ()=>{
+  canvas.width = window.innerWidth > 800 ? 480 : window.innerWidth*0.6;
+  canvas.height = window.innerHeight > 600 ? 640 : window.innerHeight*0.7;
 });
 
-let kazimGucu = 0;
-let mevcutKazim = 0;
-let lastUpdate = Date.now();
+let puan = 0;
 let gameStarted = false;
+let rocks = [];
+let lastSpawn = 0;
+let globalRockSpeed = 2;
+let spawnInterval = 1500;
 
-const kazimGucuEl = document.getElementById("kazimGucu");
-const mevcutKazimEl = document.getElementById("mevcutKazim");
+const puanEl = document.getElementById("puan");
+const startBtn = document.getElementById("startGameBtn");
+const statsEl = document.getElementById("stats");
 
+// Orijinal taş görselleri
 const images = { stone:new Image(), silver:new Image(), gold:new Image(), red:new Image() };
 images.stone.src = "stone.png";
 images.silver.src = "silver.png";
 images.gold.src = "gold.png";
 images.red.src = "red.png";
 
-let rocks = [];
-let lastSpawn = 0;
-let stoneCounter = 0;
-let silverCounter = 0;
-let totalSilverDestroyed = 0;
-
-let globalRockSpeed = 2;
-let spawnInterval = 1500;
-
-if(localStorage.getItem("kazimGucu")){
-  kazimGucu = parseFloat(localStorage.getItem("kazimGucu"));
-}
-if(localStorage.getItem("mevcutKazim")){
-  mevcutKazim = parseFloat(localStorage.getItem("mevcutKazim"));
-}
-
+// Taş sınıfı
 class Rock {
   constructor(type){
     this.type = type;
@@ -224,18 +140,19 @@ class Rock {
   draw(){ ctx.drawImage(images[this.type],this.x,this.y,this.size,this.size); }
 }
 
-function spawnRock() { rocks.push(new Rock("stone")); }
-function spawnSilver() { rocks.push(new Rock("silver")); }
-function spawnGold() { rocks.push(new Rock("gold")); }
-function spawnRed() { rocks.push(new Rock("red")); }
+// Taş spawn fonksiyonları
+function spawnRock(){ rocks.push(new Rock("stone")); }
+function spawnSilver(){ rocks.push(new Rock("silver")); }
+function spawnGold(){ rocks.push(new Rock("gold")); }
+function spawnRed(){ rocks.push(new Rock("red")); }
 
-function getRedChance(kazim){
-  if(kazim < 100) return 0.10;
-  else if(kazim < 500) return 0.20;
-  else if(kazim < 2500) return 0.35;
-  else return 0.40;
+// Kırmızı taş olasılığı puana göre artacak
+function getRedChance(puan){
+  // Basit lineer artış, 0.1 ile 0.6 arasında
+  return Math.min(0.1 + puan/10000, 0.6);
 }
 
+// Canvas click event
 canvas.addEventListener("click",(e)=>{
   if(!gameStarted) return;
   const rect=canvas.getBoundingClientRect();
@@ -244,19 +161,14 @@ canvas.addEventListener("click",(e)=>{
 
   rocks.forEach((rock,i)=>{
     if(mx>rock.x && mx<rock.x+rock.size && my>rock.y && my<rock.y+rock.size){
-      if(rock.type==="stone"){
-        kazimGucu+=0.0000000001;
-        stoneCounter++;
-        if(stoneCounter>=25){ stoneCounter=0; spawnSilver(); }
+      if(rock.type==="stone"){ puan += 1; }
+      if(rock.type==="silver"){ puan += 10; }
+      if(rock.type==="gold"){ puan += 100; }
+      if(rock.type==="red"){
+        puan = Math.floor(puan*0.5);
+        globalRockSpeed = 1; // kısa süreli yavaşlama
+        setTimeout(()=>{ globalRockSpeed = Math.min(2+puan/1000,5); }, 2000);
       }
-      if(rock.type==="silver"){
-        kazimGucu+=0.0000000010;
-        silverCounter++;
-        totalSilverDestroyed++;
-        if(totalSilverDestroyed>=30){ spawnGold(); totalSilverDestroyed=0; }
-      }
-      if(rock.type==="gold"){ kazimGucu+=0.0000000100; }
-      if(rock.type==="red"){ kazimGucu*=0.5; }
       rocks.splice(i,1);
     }
   });
@@ -265,78 +177,78 @@ canvas.addEventListener("click",(e)=>{
 function update(){
   if(!gameStarted) return;
   let now = Date.now();
-  let delta = (now-lastUpdate)/1000;
-  lastUpdate = now;
-  mevcutKazim += kazimGucu*delta*0.01;
-
-  if(kazimGucu <= 500){ globalRockSpeed = 2; spawnInterval = 1500; }
-  else if(kazimGucu <= 2000){ globalRockSpeed = 3; spawnInterval = 1200; }
-  else if(kazimGucu <= 5000){ globalRockSpeed = 4; spawnInterval = 900; }
-  else { globalRockSpeed = 5; spawnInterval = 700; }
-
   if(now - lastSpawn > spawnInterval){
-    if(Math.random() < getRedChance(kazimGucu)) spawnRed();
-    else spawnRock();
+    if(Math.random() < getRedChance(puan)) spawnRed();
+    else{
+      const r = Math.random();
+      if(r<0.7) spawnRock();
+      else if(r<0.95) spawnSilver();
+      else spawnGold();
+    }
     lastSpawn = now;
   }
+
+  // oyun hızı puana göre artıyor
+  globalRockSpeed = Math.min(2+puan/1000,5);
+  spawnInterval = Math.max(700,1500 - puan*0.5);
 
   rocks.forEach(r=>r.update());
   rocks = rocks.filter(r=>r.y<canvas.height);
 
-  localStorage.setItem("kazimGucu", kazimGucu);
-  localStorage.setItem("mevcutKazim", mevcutKazim);
+  puanEl.textContent = puan;
 }
 
 function draw(){
   ctx.clearRect(0,0,canvas.width,canvas.height);
   rocks.forEach(r=>r.draw());
-  kazimGucuEl.textContent=kazimGucu.toFixed(10);
-  mevcutKazimEl.textContent=mevcutKazim.toFixed(10);
 }
 
 function loop(){ update(); draw(); requestAnimationFrame(loop); }
 
-const watchAdBtn = document.getElementById("watchAdBtn");
-const adModal = document.getElementById("adModal");
-const adSecondsEl = document.getElementById("adSeconds");
-
-watchAdBtn.addEventListener("click", ()=>{
-  watchAdBtn.style.display="none";
-  adModal.style.display="flex";
-  let remaining = 15;
-  let interval = setInterval(()=>{
-    remaining--;
-    adSecondsEl.textContent = remaining;
-    if(remaining <= 0){
-      clearInterval(interval);
-      adModal.style.display="none";
-      gameStarted = true;
-      loop();
-    }
-  },1000);
+// TRX yatırma simülasyonu
+startBtn.addEventListener("click", ()=>{
+  gameStarted = true;
+  statsEl.style.display = "block";
+  startBtn.style.display = "none";
+  loop();
 });
 
-/* 🔹 Panel Kontrol */
-const settingsBtn = document.getElementById("settingsBtn");
-const settingsPanel = document.getElementById("settingsPanel");
-const boostBtn = document.getElementById("boostBtn");
-const withdrawBtn = document.getElementById("withdrawBtn");
-const boostArea = document.getElementById("boostArea");
-const withdrawArea = document.getElementById("withdrawArea");
+// Leaderboard simülasyonu
+let leaderboardData = [
+  {name:"Alice", score:1200},
+  {name:"Bob", score:950},
+  {name:"Charlie", score:800},
+  {name:"David", score:700},
+  {name:"Eve", score:600},
+  {name:"Frank", score:550},
+  {name:"Grace", score:500},
+  {name:"Heidi", score:450},
+  {name:"Ivan", score:400},
+  {name:"Judy", score:350}
+];
 
-settingsBtn.addEventListener("click", ()=>{
-  settingsPanel.style.display = (settingsPanel.style.display === "none" || settingsPanel.style.display === "") ? "block" : "none";
-});
+function updateLeaderboard(){
+  const topList = document.getElementById("topList");
+  topList.innerHTML = "";
+  leaderboardData.sort((a,b)=>b.score - a.score);
+  leaderboardData.slice(0,10).forEach((p,i)=>{
+    const li = document.createElement("li");
+    li.textContent = `${i+1}. ${p.name} - ${p.score}`;
+    topList.appendChild(li);
+  });
 
-boostBtn.addEventListener("click", ()=>{
-  boostArea.style.display = boostArea.style.display === "none" ? "block" : "none";
-  withdrawArea.style.display = "none";
-});
+  // Oyuncu sırası
+  let myName = "Sen";
+  let myScore = puan;
+  leaderboardData.push({name:myName, score:myScore});
+  leaderboardData.sort((a,b)=>b.score - a.score);
+  let myIndex = leaderboardData.findIndex(p=>p.name===myName && p.score===myScore);
+  document.getElementById("myRank").textContent = `Senin Sıran: ${myIndex+1}. - ${myScore} puan`;
+  leaderboardData.pop();
+}
 
-withdrawBtn.addEventListener("click", ()=>{
-  withdrawArea.style.display = withdrawArea.style.display === "none" ? "block" : "none";
-  boostArea.style.display = "none";
-});
+// her 1 saniyede leaderboard güncelleniyor
+setInterval(()=>{ if(gameStarted) updateLeaderboard(); },1000);
 </script>
 </body>
 </html>

@@ -9,16 +9,21 @@ body {
   background: black;
   font-family: sans-serif;
   overflow: hidden;
-  position: relative;
   color: white;
 }
 
-/* Oyun alanı */
+/* Wrapper: oyun alanı ve tablo */
+#main-wrapper {
+  display: flex;
+  justify-content: center; /* oyun ortada */
+  align-items: flex-start;
+  gap: 120px; /* oyun ve tablo arası mesafe */
+  padding-top: 50px;
+  width: 100%;
+}
+
+/* Oyun alanı container */
 #game-wrapper {
-  position: absolute;
-  left: 50%;
-  top: 50px;
-  transform: translateX(-50%);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -49,10 +54,8 @@ canvas {
 
 /* Lider tablosu */
 #leaderboard-container {
-  position: absolute;
-  top: 50px; /* canvas üst hizası */
-  left: calc(50% + 300px); /* oyun alanından sağa kaydır */
   width: 200px;
+  height: 640px; /* burayı istediğin değere değiştir */
   background: #111;
   border: 2px solid #555;
   border-radius: 10px;
@@ -80,33 +83,27 @@ canvas {
 
 /* Responsive mobilde */
 @media(max-width: 900px){
+  #main-wrapper { flex-direction: column; align-items: center; gap: 20px; }
   #leaderboard-container {
-    position: static;
     width: 90%;
-    margin-top: 20px;
-    left: auto;
-    top: auto;
     height: auto;
-  }
-  #game-wrapper {
-    position: static;
-    transform: none;
-    margin: 0 auto;
   }
 }
 </style>
 </head>
 <body>
 
-<div id="game-wrapper">
-  <h1 id="game-title">MTrxGame</h1>
-  <div id="puanDisplay">Puan: <span id="puan">0</span></div>
-  <canvas id="gameCanvas"></canvas>
-</div>
+<div id="main-wrapper">
+  <div id="game-wrapper">
+    <h1 id="game-title">MTrxGame</h1>
+    <div id="puanDisplay">Puan: <span id="puan">0</span></div>
+    <canvas id="gameCanvas"></canvas>
+  </div>
 
-<div id="leaderboard-container">
-  <h2>Lider Tablosu</h2>
-  <ul id="leaderboard"></ul>
+  <div id="leaderboard-container">
+    <h2>Lider Tablosu</h2>
+    <ul id="leaderboard"></ul>
+  </div>
 </div>
 
 <script>
@@ -119,7 +116,6 @@ canvas.height = window.innerHeight > 600 ? 640 : window.innerHeight*0.7;
 window.addEventListener("resize", ()=>{
   canvas.width = window.innerWidth > 600 ? 480 : window.innerWidth*0.9;
   canvas.height = window.innerHeight > 600 ? 640 : window.innerHeight*0.7;
-  updateLeaderboardHeight();
 });
 
 let puan = 0;
@@ -272,15 +268,6 @@ function updateLeaderboard(currentScore){
     leaderboardEl.innerHTML += `<li>Sen: ${playerAddress} - ${currentScore} (#${playerIndex+1})</li>`;
   }
 }
-
-// Lider tablosu yüksekliğini canvas ile eşitle
-function updateLeaderboardHeight() {
-  const leaderboard = document.getElementById("leaderboard-container");
-  leaderboard.style.height = canvas.height + "px";
-}
-
-updateLeaderboardHeight();
-window.addEventListener("resize", updateLeaderboardHeight);
 
 updateLeaderboard(puan);
 </script>

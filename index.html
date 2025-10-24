@@ -2,7 +2,7 @@
 <html lang="tr">
 <head>
 <meta charset="UTF-8">
-<title>MTrxGame - Sıfır Puan Demo</title>
+<title>MTrxGame - Lider Tablosu Demo</title>
 <style>
 body {
   margin: 0;
@@ -11,8 +11,8 @@ body {
   font-family: sans-serif;
   display: flex;
   justify-content: center;
-  align-items: center;
-  height: 100vh;
+  align-items: flex-start;
+  min-height: 100vh;
   overflow: hidden;
 }
 #game-container {
@@ -24,9 +24,42 @@ canvas {
   background: black;
   border: 4px solid #555;
 }
+/* Lider Tablosu stili */
+#leaderboard-container {
+  margin-left: 20px;
+  padding: 10px;
+  background: #111;
+  border: 2px solid #555;
+  border-radius: 10px;
+  width: 200px;
+  height: 640px;
+  overflow-y: auto;
+}
+#leaderboard-container h2 {
+  text-align: center;
+  margin-top: 0;
+  font-size: 18px;
+  color: #0f0;
+}
+#leaderboard {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+#leaderboard li {
+  margin: 5px 0;
+  font-size: 14px;
+}
 #puanDisplay {
   margin-bottom: 10px;
   font-size: 20px;
+  text-align: center;
+}
+
+/* Responsive: mobilde tablo altta */
+@media(max-width: 700px){
+  body { flex-direction: column; align-items: center; }
+  #leaderboard-container { margin-left: 0; margin-top: 20px; width: 90%; height: auto; }
 }
 </style>
 </head>
@@ -37,7 +70,14 @@ canvas {
   <canvas id="gameCanvas"></canvas>
 </div>
 
+<!-- Lider Tablosu -->
+<div id="leaderboard-container">
+  <h2>Lider Tablosu</h2>
+  <ul id="leaderboard"></ul>
+</div>
+
 <script>
+// ------------------- Mevcut Oyun Kodu -------------------
 const canvas = document.getElementById("gameCanvas");
 const ctx = canvas.getContext("2d");
 canvas.width = window.innerWidth > 600 ? 480 : window.innerWidth*0.9;
@@ -104,6 +144,7 @@ canvas.addEventListener("click",(e)=>{
       if(rock.type==="gold") puan += 100;
       if(rock.type==="red") puan = Math.floor(puan*0.5);
       rocks.splice(i,1);
+      updateLeaderboard(puan); // Skor değişince tabloyu güncelle
     }
   });
 });
@@ -144,6 +185,61 @@ function loop(){
 
 // Oyun başlat
 loop();
+
+// ------------------- Lider Tablosu Kodu -------------------
+const leaderboardEl = document.getElementById("leaderboard");
+
+// Mock veri (TRX adresleri ve skor)
+let leaderboardData = [
+  { address: "TAAA111...", score: 3200 },
+  { address: "TBBB222...", score: 2800 },
+  { address: "TCCC333...", score: 2500 },
+  { address: "TDDD444...", score: 2000 },
+  { address: "TEEE555...", score: 1800 },
+  { address: "TFFF666...", score: 1500 },
+  { address: "TGGG777...", score: 1200 },
+  { address: "THHH888...", score: 1000 },
+  { address: "TIII999...", score: 800 },
+  { address: "TJJJ000...", score: 500 }
+];
+
+// Oyuncu TRX adresi (mock, gerçek entegrasyonda URL parametresinden alınacak)
+let playerAddress = "TMERTERDEM...";
+
+// Skoru tabloya ekle ve güncelle
+function updateLeaderboard(currentScore){
+  // Eğer oyuncu tabloda yoksa ekle
+  let existing = leaderboardData.find(p => p.address === playerAddress);
+  if(existing){
+    existing.score = Math.max(existing.score, currentScore);
+  } else {
+    leaderboardData.push({ address: playerAddress, score: currentScore });
+  }
+
+  // Skoru yüksekten düşüğe sırala
+  leaderboardData.sort((a,b)=>b.score - a.score);
+
+  // İlk 10 kişiyi al
+  let top10 = leaderboardData.slice(0,10);
+
+  // Listeyi temizle
+  leaderboardEl.innerHTML = "";
+
+  // Top10’u ekle
+  top10.forEach((p,i)=>{
+    leaderboardEl.innerHTML += `<li>${i+1}. ${p.address} - ${p.score}</li>`;
+  });
+
+  // Eğer oyuncu top10’da değilse en alta kendi sırasını ekle
+  let playerIndex = leaderboardData.findIndex(p=>p.address===playerAddress);
+  if(playerIndex >= 10){
+    leaderboardEl.innerHTML += `<li>Sen: ${playerAddress} - ${currentScore} (#${playerIndex+1})</li>`;
+  }
+}
+
+// İlk tabloyu başta güncelle
+updateLeaderboard(puan);
+
 </script>
 
 </body>

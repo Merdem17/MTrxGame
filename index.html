@@ -9,14 +9,16 @@ body {
   background: black;
   color: white;
   font-family: sans-serif;
-  display: flex;
-  justify-content: flex-start; /* sol başlangıç */
-  align-items: flex-start;
-  min-height: 100vh;
-  padding-left: 50px; /* sol boşluk */
-  padding-right: 50px; /* sağ boşluk */
-  gap: 50px; /* canvas ile tablo arası boşluk */
   overflow: hidden;
+}
+
+#main-wrapper {
+  display: flex;
+  justify-content: center; /* oyun alanı ortalanır */
+  align-items: flex-start;
+  gap: 50px; /* canvas ile tablo arası boşluk */
+  width: 100%;
+  padding: 20px;
 }
 
 #game-container {
@@ -25,7 +27,6 @@ body {
   align-items: center;
 }
 
-/* Başlık */
 #game-title {
   font-size: 32px;
   color: #0f0;
@@ -40,7 +41,6 @@ canvas {
   border: 4px solid #555;
 }
 
-/* Lider Tablosu stili */
 #leaderboard-container {
   padding: 10px;
   background: #111;
@@ -49,23 +49,27 @@ canvas {
   width: 200px;
   height: 640px;
   overflow-y: auto;
-  margin-left: auto; /* tabloyu sağa it */
+  margin-left: auto; /* tablo sağa yaslanır */
 }
+
 #leaderboard-container h2 {
   text-align: center;
   margin-top: 0;
   font-size: 18px;
   color: #0f0;
 }
+
 #leaderboard {
   list-style: none;
   padding: 0;
   margin: 0;
 }
+
 #leaderboard li {
   margin: 5px 0;
   font-size: 14px;
 }
+
 #puanDisplay {
   margin-bottom: 10px;
   font-size: 20px;
@@ -74,23 +78,24 @@ canvas {
 
 /* Responsive: mobilde tablo altta */
 @media(max-width: 700px){
-  body { flex-direction: column; align-items: center; padding:0; gap:20px; }
+  #main-wrapper { flex-direction: column; align-items: center; gap: 20px; padding:0; }
   #leaderboard-container { width: 90%; height: auto; margin-left: 0; margin-top: 20px; }
 }
 </style>
 </head>
 <body>
 
-<div id="game-container">
-  <h1 id="game-title">MTrxGame</h1>
-  <div id="puanDisplay">Puan: <span id="puan">0</span></div>
-  <canvas id="gameCanvas"></canvas>
-</div>
+<div id="main-wrapper">
+  <div id="game-container">
+    <h1 id="game-title">MTrxGame</h1>
+    <div id="puanDisplay">Puan: <span id="puan">0</span></div>
+    <canvas id="gameCanvas"></canvas>
+  </div>
 
-<!-- Lider Tablosu -->
-<div id="leaderboard-container">
-  <h2>Lider Tablosu</h2>
-  <ul id="leaderboard"></ul>
+  <div id="leaderboard-container">
+    <h2>Lider Tablosu</h2>
+    <ul id="leaderboard"></ul>
+  </div>
 </div>
 
 <script>

@@ -2,7 +2,7 @@
 <html lang="tr">
 <head>
 <meta charset="UTF-8">
-<title>MTrxGame - Lider Tablosu & Sıralı Taşlar</title>
+<title>MTrxGame - Lider Tablosu</title>
 <style>
 body {
   margin: 0;
@@ -15,13 +15,10 @@ body {
 
 /* Oyun alanı container */
 #game-wrapper {
-  position: absolute;
-  left: 50%;
-  top: 50px;
-  transform: translateX(-50%);
   display: flex;
   flex-direction: column;
   align-items: center;
+  margin-top: 50px;
 }
 
 /* Başlık */
@@ -30,7 +27,6 @@ body {
   color: #0f0;
   margin-bottom: 10px;
   text-align: center;
-  font-family: 'Verdana', sans-serif;
   text-shadow: 2px 2px 4px #000;
 }
 
@@ -49,11 +45,10 @@ canvas {
 
 /* Lider tablosu */
 #leaderboard-container {
-  position: absolute;
+  position: absolute;      /* absolute ile sabit konum */
   top: 50px;
-  left: calc(50% + 300px); /* oyun alanından sağa kaydır */
+  left: calc(50% + 280px); /* oyun alanının ortasından sağa kaydır */
   width: 200px;
-  height: 640px; /* JS ile canvas yüksekliğine eşitlenecek */
   background: #111;
   border: 2px solid #555;
   border-radius: 10px;
@@ -87,11 +82,6 @@ canvas {
     height: auto;
     margin-top: 20px;
   }
-  #game-wrapper {
-    position: static;
-    transform: none;
-    margin: 0 auto;
-  }
 }
 </style>
 </head>
@@ -118,7 +108,7 @@ canvas.height = window.innerHeight > 600 ? 640 : window.innerHeight*0.7;
 window.addEventListener("resize", ()=>{
   canvas.width = window.innerWidth > 600 ? 480 : window.innerWidth*0.9;
   canvas.height = window.innerHeight > 600 ? 640 : window.innerHeight*0.7;
-  updateLeaderboardHeight();
+  updateLeaderboardHeight(); // yükseklik eşitle
 });
 
 let puan = 0;

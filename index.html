@@ -2,7 +2,7 @@
 <html lang="tr">
 <head>
 <meta charset="UTF-8">
-<title>MTrxGame - Lider Tablosu Demo</title>
+<title>MTrxGame - Lider Tablosu & Sıralı Taşlar</title>
 <style>
 body {
   margin: 0;
@@ -13,6 +13,7 @@ body {
   justify-content: center;
   align-items: flex-start;
   min-height: 100vh;
+  gap: 50px; /* canvas ile tablo arası boşluk */
   overflow: hidden;
 }
 #game-container {
@@ -24,9 +25,9 @@ canvas {
   background: black;
   border: 4px solid #555;
 }
+
 /* Lider Tablosu stili */
 #leaderboard-container {
-  margin-left: 20px;
   padding: 10px;
   background: #111;
   border: 2px solid #555;
@@ -59,7 +60,7 @@ canvas {
 /* Responsive: mobilde tablo altta */
 @media(max-width: 700px){
   body { flex-direction: column; align-items: center; }
-  #leaderboard-container { margin-left: 0; margin-top: 20px; width: 90%; height: auto; }
+  #leaderboard-container { width: 90%; height: auto; margin-top: 20px; }
 }
 </style>
 </head>
@@ -94,6 +95,9 @@ let lastSpawn = 0;
 let globalRockSpeed = 2;
 let spawnInterval = 1500;
 
+let silverCount = 0; // silver sayısı
+let goldCount = 0;   // gold sayısı
+
 const puanEl = document.getElementById("puan");
 
 // Taş görselleri
@@ -126,9 +130,9 @@ function spawnSilver(){ rocks.push(new Rock("silver")); }
 function spawnGold(){ rocks.push(new Rock("gold")); }
 function spawnRed(){ rocks.push(new Rock("red")); }
 
-// Kırmızı taş olasılığı puana göre artacak
+// Kırmızı taş olasılığı puana göre artıyor
 function getRedChance(puan){
-  return Math.min(0.1 + puan/10000, 0.6);
+  return Math.min(0.1 + puan/1000 * 0.05, 0.6);
 }
 
 // Canvas click event
@@ -141,30 +145,45 @@ canvas.addEventListener("click",(e)=>{
     if(mx > rock.x && mx < rock.x+rock.size && my > rock.y && my < rock.y+rock.size){
       if(rock.type==="stone") puan += 1;
       if(rock.type==="silver") puan += 10;
-      if(rock.type==="gold") puan += 100;
-      if(rock.type==="red") puan = Math.floor(puan*0.5);
+      if(rock.type==="gold") puan += 50;
+      if(rock.type==="red") puan = Math.max(0, Math.floor(puan*0.5));
       rocks.splice(i,1);
       updateLeaderboard(puan); // Skor değişince tabloyu güncelle
     }
   });
 });
 
+// ------------------- Yeni Taş Düşüş Mantığı -------------------
+function spawnRocksByScore(){
+  spawnRock(); // stone her zaman
+
+  // Her 25 puanda silver
+  if(puan > 0 && puan % 25 === 0){
+    spawnSilver();
+    silverCount++;
+  }
+
+  // Her 25 silver -> gold
+  if(silverCount >= 25){
+    spawnGold();
+    silverCount = 0;
+    goldCount++;
+  }
+
+  // Kırmızı taş olasılığı puana göre
+  if(Math.random() < getRedChance(puan)) spawnRed();
+}
+
 function update(){
   let now = Date.now();
   if(now - lastSpawn > spawnInterval){
-    if(Math.random() < getRedChance(puan)) spawnRed();
-    else {
-      const r = Math.random();
-      if(r<0.7) spawnRock();
-      else if(r<0.95) spawnSilver();
-      else spawnGold();
-    }
+    spawnRocksByScore();
     lastSpawn = now;
   }
 
   // Oyun hızı puana göre artıyor
-  globalRockSpeed = Math.min(2 + puan/1000, 5);
-  spawnInterval = Math.max(700, 1500 - puan*0.5);
+  globalRockSpeed = Math.min(2 + puan/500, 7);
+  spawnInterval = Math.max(400, 1500 - puan*0.5);
 
   rocks.forEach(r=>r.update());
   rocks = rocks.filter(r=>r.y < canvas.height);
@@ -186,29 +205,28 @@ function loop(){
 // Oyun başlat
 loop();
 
-// ------------------- Lider Tablosu Kodu -------------------
+// ------------------- Lider Tablosu -------------------
 const leaderboardEl = document.getElementById("leaderboard");
 
 // Mock veri (TRX adresleri ve skor)
 let leaderboardData = [
-  { address: "TAAA111...", score: 3200 },
-  { address: "TBBB222...", score: 2800 },
-  { address: "TCCC333...", score: 2500 },
-  { address: "TDDD444...", score: 2000 },
-  { address: "TEEE555...", score: 1800 },
-  { address: "TFFF666...", score: 1500 },
-  { address: "TGGG777...", score: 1200 },
-  { address: "THHH888...", score: 1000 },
-  { address: "TIII999...", score: 800 },
-  { address: "TJJJ000...", score: 500 }
+  { address: "TAAA111...", score: 0 },
+  { address: "TBBB222...", score: 0 },
+  { address: "TCCC333...", score: 0 },
+  { address: "TDDD444...", score: 0 },
+  { address: "TEEE555...", score: 0 },
+  { address: "TFFF666...", score: 0 },
+  { address: "TGGG777...", score: 0 },
+  { address: "THHH888...", score: 0 },
+  { address: "TIII999...", score: 0 },
+  { address: "TJJJ000...", score: 0 }
 ];
 
-// Oyuncu TRX adresi (mock, gerçek entegrasyonda URL parametresinden alınacak)
+// Oyuncu TRX adresi (mock)
 let playerAddress = "TMERTERDEM...";
 
 // Skoru tabloya ekle ve güncelle
 function updateLeaderboard(currentScore){
-  // Eğer oyuncu tabloda yoksa ekle
   let existing = leaderboardData.find(p => p.address === playerAddress);
   if(existing){
     existing.score = Math.max(existing.score, currentScore);
@@ -216,21 +234,14 @@ function updateLeaderboard(currentScore){
     leaderboardData.push({ address: playerAddress, score: currentScore });
   }
 
-  // Skoru yüksekten düşüğe sırala
   leaderboardData.sort((a,b)=>b.score - a.score);
-
-  // İlk 10 kişiyi al
   let top10 = leaderboardData.slice(0,10);
 
-  // Listeyi temizle
   leaderboardEl.innerHTML = "";
-
-  // Top10’u ekle
   top10.forEach((p,i)=>{
     leaderboardEl.innerHTML += `<li>${i+1}. ${p.address} - ${p.score}</li>`;
   });
 
-  // Eğer oyuncu top10’da değilse en alta kendi sırasını ekle
   let playerIndex = leaderboardData.findIndex(p=>p.address===playerAddress);
   if(playerIndex >= 10){
     leaderboardEl.innerHTML += `<li>Sen: ${playerAddress} - ${currentScore} (#${playerIndex+1})</li>`;
@@ -239,7 +250,6 @@ function updateLeaderboard(currentScore){
 
 // İlk tabloyu başta güncelle
 updateLeaderboard(puan);
-
 </script>
 
 </body>

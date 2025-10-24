@@ -8,7 +8,7 @@ body {
   margin: 0;
   background: black;
   font-family: sans-serif;
-  overflow: hidden;
+  overflow-x: hidden;
   color: white;
 }
 
@@ -16,16 +16,17 @@ body {
 #game-wrapper {
   display: flex;
   flex-direction: row;
-  align-items: flex-start; /* Üstten hizala */
-  justify-content: center;
-  margin-top: 50px; /* Başlık ve puan için boşluk */
+  justify-content: center; /* oyun alanını ortala */
+  position: relative;
+  margin-top: 50px; /* başlık için boşluk */
 }
 
-/* Sol taraf: oyun alanı */
+/* Oyun alanı */
 #game-area {
   display: flex;
   flex-direction: column;
   align-items: center;
+  position: relative;
 }
 
 /* Başlık */
@@ -50,7 +51,7 @@ canvas {
   border: 4px solid #555;
 }
 
-/* Sağ taraf: lider tablosu */
+/* Lider tablosu */
 #leaderboard-container {
   width: 200px;
   background: #111;
@@ -58,7 +59,9 @@ canvas {
   border-radius: 10px;
   overflow-y: auto;
   padding: 10px;
-  margin-left: 40px; /* Oyun alanından sağa kaydır */
+  position: absolute;
+  left: 1200px; /* oyun alanından baya sağda */
+  top: calc(50px + 32px + 10px + 20px); /* margin-top + başlık + margin + puan display yüksekliği */
   display: flex;
   flex-direction: column;
 }
@@ -82,15 +85,12 @@ canvas {
 }
 
 /* Mobil uyum */
-@media(max-width: 900px){
-  #game-wrapper {
-    flex-direction: column;
-    align-items: center;
-  }
+@media(max-width: 1400px){
   #leaderboard-container {
-    width: 90%;
-    margin-left: 0;
-    margin-top: 20px;
+    left: auto;
+    margin-left: 20px;
+    top: auto;
+    position: static;
   }
 }
 </style>
@@ -98,14 +98,13 @@ canvas {
 <body>
 
 <div id="game-wrapper">
-  <!-- Sol: oyun alanı -->
   <div id="game-area">
     <h1 id="game-title">MTrxGame</h1>
     <div id="puanDisplay">Puan: <span id="puan">0</span></div>
     <canvas id="gameCanvas"></canvas>
   </div>
 
-  <!-- Sağ: lider tablosu -->
+  <!-- Lider tablosu sağda, puan display hizasında -->
   <div id="leaderboard-container">
     <h2>Lider Tablosu</h2>
     <ul id="leaderboard"></ul>
@@ -113,7 +112,7 @@ canvas {
 </div>
 
 <script>
-// ------------------- Oyun Kodu -------------------
+// Oyun kodu
 const canvas = document.getElementById("gameCanvas");
 const ctx = canvas.getContext("2d");
 canvas.width = window.innerWidth > 600 ? 480 : window.innerWidth*0.9;
@@ -188,7 +187,7 @@ canvas.addEventListener("click",(e)=>{
   });
 });
 
-// ------------------- Taş düşüş mantığı -------------------
+// Taş düşüş mantığı
 function spawnRocksByScore(){
   spawnRock();
 
@@ -235,7 +234,7 @@ function loop(){
 
 loop();
 
-// ------------------- Lider tablosu -------------------
+// Lider tablosu
 const leaderboardEl = document.getElementById("leaderboard");
 
 let leaderboardData = [

@@ -10,17 +10,31 @@ body {
   color: white;
   font-family: sans-serif;
   display: flex;
-  justify-content: center;
+  justify-content: flex-start; /* sol başlangıç */
   align-items: flex-start;
   min-height: 100vh;
+  padding-left: 50px; /* sol boşluk */
+  padding-right: 50px; /* sağ boşluk */
   gap: 50px; /* canvas ile tablo arası boşluk */
   overflow: hidden;
 }
+
 #game-container {
   display: flex;
   flex-direction: column;
   align-items: center;
 }
+
+/* Başlık */
+#game-title {
+  font-size: 32px;
+  color: #0f0;
+  margin-bottom: 10px;
+  text-align: center;
+  font-family: 'Verdana', sans-serif;
+  text-shadow: 2px 2px 4px #000;
+}
+
 canvas {
   background: black;
   border: 4px solid #555;
@@ -35,6 +49,7 @@ canvas {
   width: 200px;
   height: 640px;
   overflow-y: auto;
+  margin-left: auto; /* tabloyu sağa it */
 }
 #leaderboard-container h2 {
   text-align: center;
@@ -59,14 +74,15 @@ canvas {
 
 /* Responsive: mobilde tablo altta */
 @media(max-width: 700px){
-  body { flex-direction: column; align-items: center; }
-  #leaderboard-container { width: 90%; height: auto; margin-top: 20px; }
+  body { flex-direction: column; align-items: center; padding:0; gap:20px; }
+  #leaderboard-container { width: 90%; height: auto; margin-left: 0; margin-top: 20px; }
 }
 </style>
 </head>
 <body>
 
 <div id="game-container">
+  <h1 id="game-title">MTrxGame</h1>
   <div id="puanDisplay">Puan: <span id="puan">0</span></div>
   <canvas id="gameCanvas"></canvas>
 </div>

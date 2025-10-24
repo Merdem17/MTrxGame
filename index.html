@@ -55,7 +55,7 @@ canvas {
 /* Lider tablosu */
 #leaderboard-container {
   width: 200px;
-  height: 640px; /* burayı istediğin değere değiştir */
+  height: 640px; /* masaüstü yüksekliği */
   background: #111;
   border: 2px solid #555;
   border-radius: 10px;
@@ -81,12 +81,22 @@ canvas {
   font-size: 14px;
 }
 
-/* Responsive mobilde */
+/* Mobil ve küçük ekran uyumu */
+@media(max-height: 600px){
+  #leaderboard-container {
+    height: 70vh; /* ekran yüksekliğinin %70’i */
+  }
+}
+
 @media(max-width: 900px){
-  #main-wrapper { flex-direction: column; align-items: center; gap: 20px; }
+  #main-wrapper {
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+  }
   #leaderboard-container {
     width: 90%;
-    height: auto;
+    height: auto; /* mobilde otomatik yükseklik */
   }
 }
 </style>

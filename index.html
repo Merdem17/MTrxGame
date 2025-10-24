@@ -7,23 +7,18 @@
 body {
   margin: 0;
   background: black;
-  color: white;
   font-family: sans-serif;
   overflow: hidden;
+  position: relative;
+  color: white;
 }
 
-/* Wrapper: oyun alanı ve tablo */
-#main-wrapper {
-  display: flex;
-  justify-content: center; /* oyun alanı ortalanır */
-  align-items: flex-start;
-  width: 100%;
-  gap: 0; /* tablo mesafesini JS margin ile ayarlayacağız */
-  padding: 20px;
-}
-
-/* Oyun alanı container */
+/* Oyun alanı */
 #game-wrapper {
+  position: absolute;
+  left: 50%;
+  top: 50px;
+  transform: translateX(-50%);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -45,15 +40,24 @@ canvas {
   border: 4px solid #555;
 }
 
+/* Puan display */
+#puanDisplay {
+  margin-bottom: 10px;
+  font-size: 20px;
+  text-align: center;
+}
+
 /* Lider tablosu */
 #leaderboard-container {
-  padding: 10px;
+  position: absolute;
+  top: 50px; /* canvas üst hizası */
+  left: calc(50% + 300px); /* oyun alanından sağa kaydır */
+  width: 200px;
   background: #111;
   border: 2px solid #555;
   border-radius: 10px;
-  width: 200px;
   overflow-y: auto;
-  margin-left: 120px; /* oyun alanından sağ mesafe */
+  padding: 10px;
 }
 
 #leaderboard-container h2 {
@@ -74,36 +78,39 @@ canvas {
   font-size: 14px;
 }
 
-#puanDisplay {
-  margin-bottom: 10px;
-  font-size: 20px;
-  text-align: center;
-}
-
-/* Responsive: mobilde tablo altta */
-@media(max-width: 700px){
-  #main-wrapper { flex-direction: column; align-items: center; gap: 20px; padding:0; }
-  #leaderboard-container { width: 90%; height: auto; margin-left: 0; margin-top: 20px; }
+/* Responsive mobilde */
+@media(max-width: 900px){
+  #leaderboard-container {
+    position: static;
+    width: 90%;
+    margin-top: 20px;
+    left: auto;
+    top: auto;
+    height: auto;
+  }
+  #game-wrapper {
+    position: static;
+    transform: none;
+    margin: 0 auto;
+  }
 }
 </style>
 </head>
 <body>
 
-<div id="main-wrapper">
-  <div id="game-wrapper">
-    <h1 id="game-title">MTrxGame</h1>
-    <div id="puanDisplay">Puan: <span id="puan">0</span></div>
-    <canvas id="gameCanvas"></canvas>
-  </div>
+<div id="game-wrapper">
+  <h1 id="game-title">MTrxGame</h1>
+  <div id="puanDisplay">Puan: <span id="puan">0</span></div>
+  <canvas id="gameCanvas"></canvas>
+</div>
 
-  <div id="leaderboard-container">
-    <h2>Lider Tablosu</h2>
-    <ul id="leaderboard"></ul>
-  </div>
+<div id="leaderboard-container">
+  <h2>Lider Tablosu</h2>
+  <ul id="leaderboard"></ul>
 </div>
 
 <script>
-// ------------------- Mevcut Oyun Kodu -------------------
+// ------------------- Oyun Kodu -------------------
 const canvas = document.getElementById("gameCanvas");
 const ctx = canvas.getContext("2d");
 canvas.width = window.innerWidth > 600 ? 480 : window.innerWidth*0.9;
@@ -179,7 +186,7 @@ canvas.addEventListener("click",(e)=>{
   });
 });
 
-// ------------------- Yeni Taş Düşüş Mantığı -------------------
+// ------------------- Taş düşüş mantığı -------------------
 function spawnRocksByScore(){
   spawnRock();
 
@@ -226,7 +233,7 @@ function loop(){
 
 loop();
 
-// ------------------- Lider Tablosu -------------------
+// ------------------- Lider tablosu -------------------
 const leaderboardEl = document.getElementById("leaderboard");
 
 let leaderboardData = [
@@ -272,7 +279,6 @@ function updateLeaderboardHeight() {
   leaderboard.style.height = canvas.height + "px";
 }
 
-// Başta ve resize’de tablo yüksekliğini ayarla
 updateLeaderboardHeight();
 window.addEventListener("resize", updateLeaderboardHeight);
 

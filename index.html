@@ -54,6 +54,7 @@ canvas {
   width: 200px;
   height: 640px;
   overflow-y: auto;
+  margin-left: 80px; /* oyun alanından uzaklık artırıldı */
 }
 
 #leaderboard-container h2 {
@@ -83,7 +84,7 @@ canvas {
 /* Responsive: mobilde tablo altta */
 @media(max-width: 700px){
   #main-wrapper { flex-direction: column; align-items: center; gap: 20px; padding:0; }
-  #leaderboard-container { width: 90%; height: auto; margin-top: 20px; }
+  #leaderboard-container { width: 90%; height: auto; margin-left: 0; margin-top: 20px; }
 }
 </style>
 </head>

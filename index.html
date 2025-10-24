@@ -18,7 +18,7 @@ body {
   display: flex;
   flex-direction: column;
   align-items: center;
-  margin-top: 50px;
+  margin-top: 50px; /* Başlık ve puan display’i için */
 }
 
 /* Başlık */
@@ -265,8 +265,9 @@ function updateLeaderboard(currentScore){
 function updateLeaderboardPosition() {
   const lb = document.getElementById("leaderboard-container");
   const canvasRect = canvas.getBoundingClientRect();
-  lb.style.top = canvasRect.top + "px";  // canvas üstü ile hizala
-  lb.style.height = canvas.height + "px"; // canvas yüksekliği kadar
+  const offset = 0; // burayı 0-50 arası değiştirerek tabloyu biraz yukarı/aşağı kaydırabilirsin
+  lb.style.top = (canvasRect.top + offset) + "px";  
+  lb.style.height = (canvas.height - offset) + "px"; 
 }
 updateLeaderboardPosition();
 window.addEventListener("resize", updateLeaderboardPosition);

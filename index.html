@@ -2,7 +2,7 @@
 <html lang="tr">
 <head>
 <meta charset="UTF-8">
-<title>MTrxGame - TRX Giriş</title>
+<title>MTrxGame - Sanal TRX Test</title>
 <style>
 body {
   margin: 0;
@@ -12,7 +12,7 @@ body {
   color: white;
 }
 
-/* Wrapper: oyun alanı ve tablo yan yana */
+/* Wrapper */
 #game-wrapper {
   display: flex;
   flex-direction: row;
@@ -43,14 +43,14 @@ body {
   margin-bottom: 10px;
   font-size: 20px;
   text-align: center;
-  display: none; /* Başlangıçta gizli */
+  display: none;
 }
 
 /* Canvas */
 canvas {
   background: black;
   border: 4px solid #555;
-  display: none; /* Başlangıçta gizli */
+  display: none;
 }
 
 /* Lider tablosu */
@@ -63,10 +63,10 @@ canvas {
   padding: 10px;
   position: absolute;
   top: calc(50px + 32px + 10px + 20px);
-  left: 1600px; /* Sağ tarafa kaydırıldı */
+  left: 1600px;
   display: flex;
   flex-direction: column;
-  display: none; /* Başlangıçta gizli */
+  display: none;
 }
 
 #leaderboard-container h2 {
@@ -108,6 +108,15 @@ canvas {
   cursor: pointer;
 }
 
+/* Ödül simülasyonu */
+#rewards {
+  text-align: center;
+  margin-top: 20px;
+  font-size: 16px;
+  display: none;
+  color: #0f0;
+}
+
 /* Mobil uyum */
 @media(max-width: 1400px){
   #leaderboard-container {
@@ -121,7 +130,6 @@ canvas {
 </head>
 <body>
 
-<!-- TRX giriş ekranı -->
 <div id="trx-entry">
   <h1>MTrxGame</h1>
   <p>Lütfen TRX adresinizi girin:</p>
@@ -134,6 +142,7 @@ canvas {
     <h1 id="game-title">MTrxGame</h1>
     <div id="puanDisplay">Puan: <span id="puan">0</span></div>
     <canvas id="gameCanvas"></canvas>
+    <div id="rewards"></div>
   </div>
 
   <div id="leaderboard-container">
@@ -143,8 +152,9 @@ canvas {
 </div>
 
 <script>
-// -------------------- Başlangıç --------------------
+// ---------------- TRX Girişi ve Başlangıç ----------------
 let playerAddress = "";
+let virtualBalance = 1000; // Sanal TRX bakiyesi
 
 const startBtn = document.getElementById("start-game");
 const trxInput = document.getElementById("trx-address");
@@ -159,21 +169,18 @@ startBtn.addEventListener("click", ()=>{
   }
   playerAddress = addr;
 
-  // Giriş ekranını gizle, oyunu göster
   trxEntry.style.display = "none";
   gameWrapper.style.display = "flex";
 
-  // Puan display, canvas ve leaderboard görünür
   document.getElementById("puanDisplay").style.display = "block";
   document.getElementById("gameCanvas").style.display = "block";
   document.getElementById("leaderboard-container").style.display = "flex";
 
-  // Oyun döngüsünü başlat
   loop();
   updateLeaderboard(0);
 });
 
-// -------------------- Oyun Kodu --------------------
+// ---------------- Oyun Kodu ----------------
 const canvas = document.getElementById("gameCanvas");
 const ctx = canvas.getContext("2d");
 canvas.width = window.innerWidth > 600 ? 480 : window.innerWidth*0.9;
@@ -189,35 +196,21 @@ let rocks = [];
 let lastSpawn = 0;
 let globalRockSpeed = 2;
 let spawnInterval = 1500;
-
 let silverCount = 0;
 let goldCount = 0;
 
 const puanEl = document.getElementById("puan");
+const rewardsEl = document.getElementById("rewards");
 
 // Taş görselleri
-const images = {
-  stone: new Image(),
-  silver: new Image(),
-  gold: new Image(),
-  red: new Image()
-};
-images.stone.src = "stone.png";
-images.silver.src = "silver.png";
-images.gold.src = "gold.png";
-images.red.src = "red.png";
+const images = { stone: new Image(), silver: new Image(), gold: new Image(), red: new Image() };
+images.stone.src="stone.png";
+images.silver.src="silver.png";
+images.gold.src="gold.png";
+images.red.src="red.png";
 
 // Taş sınıfı
-class Rock {
-  constructor(type){
-    this.type = type;
-    this.size = window.innerWidth>600?60:40;
-    this.x = Math.random()*(canvas.width-this.size);
-    this.y = -this.size;
-  }
-  update(){ this.y += globalRockSpeed; }
-  draw(){ ctx.drawImage(images[this.type],this.x,this.y,this.size,this.size); }
-}
+class Rock { constructor(type){ this.type=type; this.size=window.innerWidth>600?60:40; this.x=Math.random()*(canvas.width-this.size); this.y=-this.size;} update(){this.y+=globalRockSpeed;} draw(){ctx.drawImage(images[this.type],this.x,this.y,this.size,this.size);}}
 
 // Taş spawn fonksiyonları
 function spawnRock(){ rocks.push(new Rock("stone")); }
@@ -225,23 +218,19 @@ function spawnSilver(){ rocks.push(new Rock("silver")); }
 function spawnGold(){ rocks.push(new Rock("gold")); }
 function spawnRed(){ rocks.push(new Rock("red")); }
 
-// Kırmızı taş olasılığı puana göre artıyor
-function getRedChance(puan){
-  return Math.min(0.1 + puan/1000 * 0.05, 0.6);
-}
+function getRedChance(puan){ return Math.min(0.1 + puan/1000*0.05,0.6); }
 
-// Canvas click event
 canvas.addEventListener("click",(e)=>{
   const rect = canvas.getBoundingClientRect();
   const mx = e.clientX - rect.left;
   const my = e.clientY - rect.top;
 
   rocks.forEach((rock,i)=>{
-    if(mx > rock.x && mx < rock.x+rock.size && my > rock.y && my < rock.y+rock.size){
-      if(rock.type==="stone") puan += 1;
-      if(rock.type==="silver") puan += 10;
-      if(rock.type==="gold") puan += 50;
-      if(rock.type==="red") puan = Math.max(0, Math.floor(puan*0.5));
+    if(mx>rock.x && mx<rock.x+rock.size && my>rock.y && my<rock.y+rock.size){
+      if(rock.type==="stone") puan+=1;
+      if(rock.type==="silver") puan+=10;
+      if(rock.type==="gold") puan+=50;
+      if(rock.type==="red") puan=Math.max(0,Math.floor(puan*0.5));
       rocks.splice(i,1);
       updateLeaderboard(puan);
     }
@@ -251,83 +240,58 @@ canvas.addEventListener("click",(e)=>{
 // Taş düşüş mantığı
 function spawnRocksByScore(){
   spawnRock();
-
-  if(puan > 0 && puan % 25 === 0){
-    spawnSilver();
-    silverCount++;
-  }
-
-  if(silverCount >= 25){
-    spawnGold();
-    silverCount = 0;
-    goldCount++;
-  }
-
-  if(Math.random() < getRedChance(puan)) spawnRed();
+  if(puan>0 && puan%25===0){ spawnSilver(); silverCount++; }
+  if(silverCount>=25){ spawnGold(); silverCount=0; goldCount++; }
+  if(Math.random()<getRedChance(puan)) spawnRed();
 }
 
 function update(){
-  let now = Date.now();
-  if(now - lastSpawn > spawnInterval){
-    spawnRocksByScore();
-    lastSpawn = now;
-  }
+  let now=Date.now();
+  if(now-lastSpawn>spawnInterval){ spawnRocksByScore(); lastSpawn=now; }
 
-  globalRockSpeed = Math.min(2 + puan/500, 7);
-  spawnInterval = Math.max(400, 1500 - puan*0.5);
+  globalRockSpeed=Math.min(2+puan/500,7);
+  spawnInterval=Math.max(400,1500-puan*0.5);
 
   rocks.forEach(r=>r.update());
-  rocks = rocks.filter(r=>r.y < canvas.height);
+  rocks=rocks.filter(r=>r.y<canvas.height);
 
-  puanEl.textContent = puan;
+  puanEl.textContent=puan;
 }
 
-function draw(){
-  ctx.clearRect(0,0,canvas.width,canvas.height);
-  rocks.forEach(r=>r.draw());
-}
+function draw(){ ctx.clearRect(0,0,canvas.width,canvas.height); rocks.forEach(r=>r.draw()); }
+function loop(){ update(); draw(); requestAnimationFrame(loop); }
 
-function loop(){
-  update();
-  draw();
-  requestAnimationFrame(loop);
-}
-
-// Lider tablosu
-const leaderboardEl = document.getElementById("leaderboard");
-
-let leaderboardData = [
-  { address: "TAAA111...", score: 0 },
-  { address: "TBBB222...", score: 0 },
-  { address: "TCCC333...", score: 0 },
-  { address: "TDDD444...", score: 0 },
-  { address: "TEEE555...", score: 0 },
-  { address: "TFFF666...", score: 0 },
-  { address: "TGGG777...", score: 0 },
-  { address: "THHH888...", score: 0 },
-  { address: "TIII999...", score: 0 },
-  { address: "TJJJ000...", score: 0 }
+// ---------------- Lider Tablosu ----------------
+const leaderboardEl=document.getElementById("leaderboard");
+let leaderboardData=[
+  {address:"TAAA111...",score:0},{address:"TBBB222...",score:0},
+  {address:"TCCC333...",score:0},{address:"TDDD444...",score:0},
+  {address:"TEEE555...",score:0},{address:"TFFF666...",score:0},
+  {address:"TGGG777...",score:0},{address:"THHH888...",score:0},
+  {address:"TIII999...",score:0},{address:"TJJJ000...",score:0}
 ];
 
 function updateLeaderboard(currentScore){
-  let existing = leaderboardData.find(p => p.address === playerAddress);
-  if(existing){
-    existing.score = Math.max(existing.score, currentScore);
-  } else {
-    leaderboardData.push({ address: playerAddress, score: currentScore });
+  let existing=leaderboardData.find(p=>p.address===playerAddress);
+  if(existing){ existing.score=Math.max(existing.score,currentScore); }
+  else{ leaderboardData.push({address:playerAddress,score:currentScore}); }
+
+  leaderboardData.sort((a,b)=>b.score-a.score);
+  let top10=leaderboardData.slice(0,10);
+
+  leaderboardEl.innerHTML="";
+  top10.forEach((p,i)=>{ leaderboardEl.innerHTML+=`<li>${i+1}. ${p.address} - ${p.score}</li>`; });
+
+  let playerIndex=leaderboardData.findIndex(p=>p.address===playerAddress);
+  if(playerIndex>=10){
+    leaderboardEl.innerHTML+=`<li>Sen: ${playerAddress} - ${currentScore} (#${playerIndex+1})</li>`;
   }
 
-  leaderboardData.sort((a,b)=>b.score - a.score);
-  let top10 = leaderboardData.slice(0,10);
-
-  leaderboardEl.innerHTML = "";
-  top10.forEach((p,i)=>{
-    leaderboardEl.innerHTML += `<li>${i+1}. ${p.address} - ${p.score}</li>`;
-  });
-
-  let playerIndex = leaderboardData.findIndex(p=>p.address===playerAddress);
-  if(playerIndex >= 10){
-    leaderboardEl.innerHTML += `<li>Sen: ${playerAddress} - ${currentScore} (#${playerIndex+1})</li>`;
+  // Sanal TRX ödülleri
+  if(top10.length>=3){
+    let reward=virtualBalance/3; // Top 3 paylaşımı
+    rewardsEl.style.display="block";
+    rewardsEl.innerHTML=`Sanal TRX Ödülleri: 1. ${top10[0].address} → ${reward.toFixed(2)} TRX, 2. ${top10[1].address} → ${reward.toFixed(2)} TRX, 3. ${top10[2].address} → ${reward.toFixed(2)} TRX`;
   }
 }
 </script>

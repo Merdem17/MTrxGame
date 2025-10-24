@@ -2,7 +2,7 @@
 <html lang="tr">
 <head>
 <meta charset="UTF-8">
-<title>MTrxGame - Lider Tablosu</title>
+<title>MTrxGame - TRX Giriş</title>
 <style>
 body {
   margin: 0;
@@ -16,9 +16,9 @@ body {
 #game-wrapper {
   display: flex;
   flex-direction: row;
-  justify-content: center; /* oyun alanını ortala */
+  justify-content: center;
   position: relative;
-  margin-top: 50px; /* başlık için boşluk */
+  margin-top: 50px;
 }
 
 /* Oyun alanı */
@@ -43,12 +43,14 @@ body {
   margin-bottom: 10px;
   font-size: 20px;
   text-align: center;
+  display: none; /* Başlangıçta gizli */
 }
 
 /* Canvas */
 canvas {
   background: black;
   border: 4px solid #555;
+  display: none; /* Başlangıçta gizli */
 }
 
 /* Lider tablosu */
@@ -60,10 +62,11 @@ canvas {
   overflow-y: auto;
   padding: 10px;
   position: absolute;
-  top: calc(50px + 32px + 10px + 20px); /* puan display hizası */
-  left: 1600px; /* Burayı artırarak daha sağa kaydırdım */
+  top: calc(50px + 32px + 10px + 20px);
+  left: 1600px; /* Sağ tarafa kaydırıldı */
   display: flex;
   flex-direction: column;
+  display: none; /* Başlangıçta gizli */
 }
 
 #leaderboard-container h2 {
@@ -84,6 +87,27 @@ canvas {
   font-size: 14px;
 }
 
+/* TRX giriş ekranı */
+#trx-entry {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-top: 200px;
+}
+
+#trx-entry input {
+  padding: 10px;
+  font-size: 16px;
+  width: 250px;
+  margin-bottom: 10px;
+}
+
+#trx-entry button {
+  padding: 10px 20px;
+  font-size: 16px;
+  cursor: pointer;
+}
+
 /* Mobil uyum */
 @media(max-width: 1400px){
   #leaderboard-container {
@@ -97,14 +121,21 @@ canvas {
 </head>
 <body>
 
-<div id="game-wrapper">
+<!-- TRX giriş ekranı -->
+<div id="trx-entry">
+  <h1>MTrxGame</h1>
+  <p>Lütfen TRX adresinizi girin:</p>
+  <input type="text" id="trx-address" placeholder="TRX adresiniz">
+  <button id="start-game">Başla</button>
+</div>
+
+<div id="game-wrapper" style="display:none;">
   <div id="game-area">
     <h1 id="game-title">MTrxGame</h1>
     <div id="puanDisplay">Puan: <span id="puan">0</span></div>
     <canvas id="gameCanvas"></canvas>
   </div>
 
-  <!-- Lider tablosu sağa kaydırıldı -->
   <div id="leaderboard-container">
     <h2>Lider Tablosu</h2>
     <ul id="leaderboard"></ul>
@@ -112,7 +143,37 @@ canvas {
 </div>
 
 <script>
-// Oyun kodu
+// -------------------- Başlangıç --------------------
+let playerAddress = "";
+
+const startBtn = document.getElementById("start-game");
+const trxInput = document.getElementById("trx-address");
+const trxEntry = document.getElementById("trx-entry");
+const gameWrapper = document.getElementById("game-wrapper");
+
+startBtn.addEventListener("click", ()=>{
+  const addr = trxInput.value.trim();
+  if(addr === ""){
+    alert("Lütfen TRX adresinizi girin!");
+    return;
+  }
+  playerAddress = addr;
+
+  // Giriş ekranını gizle, oyunu göster
+  trxEntry.style.display = "none";
+  gameWrapper.style.display = "flex";
+
+  // Puan display, canvas ve leaderboard görünür
+  document.getElementById("puanDisplay").style.display = "block";
+  document.getElementById("gameCanvas").style.display = "block";
+  document.getElementById("leaderboard-container").style.display = "flex";
+
+  // Oyun döngüsünü başlat
+  loop();
+  updateLeaderboard(0);
+});
+
+// -------------------- Oyun Kodu --------------------
 const canvas = document.getElementById("gameCanvas");
 const ctx = canvas.getContext("2d");
 canvas.width = window.innerWidth > 600 ? 480 : window.innerWidth*0.9;
@@ -232,8 +293,6 @@ function loop(){
   requestAnimationFrame(loop);
 }
 
-loop();
-
 // Lider tablosu
 const leaderboardEl = document.getElementById("leaderboard");
 
@@ -249,8 +308,6 @@ let leaderboardData = [
   { address: "TIII999...", score: 0 },
   { address: "TJJJ000...", score: 0 }
 ];
-
-let playerAddress = "TMERTERDEM...";
 
 function updateLeaderboard(currentScore){
   let existing = leaderboardData.find(p => p.address === playerAddress);
@@ -273,8 +330,6 @@ function updateLeaderboard(currentScore){
     leaderboardEl.innerHTML += `<li>Sen: ${playerAddress} - ${currentScore} (#${playerIndex+1})</li>`;
   }
 }
-
-updateLeaderboard(puan);
 </script>
 
 </body>

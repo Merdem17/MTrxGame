@@ -18,7 +18,7 @@ body {
   justify-content: center; /* oyun alanı ortalanır */
   align-items: flex-start;
   width: 100%;
-  gap: 50px; /* oyun ve tablo arası boşluk */
+  gap: 0; /* tablo mesafesini JS margin ile ayarlayacağız */
   padding: 20px;
 }
 
@@ -52,9 +52,8 @@ canvas {
   border: 2px solid #555;
   border-radius: 10px;
   width: 200px;
-  height: 640px;
   overflow-y: auto;
-  margin-left: 80px; /* oyun alanından uzaklık artırıldı */
+  margin-left: 120px; /* oyun alanından sağ mesafe */
 }
 
 #leaderboard-container h2 {
@@ -113,6 +112,7 @@ canvas.height = window.innerHeight > 600 ? 640 : window.innerHeight*0.7;
 window.addEventListener("resize", ()=>{
   canvas.width = window.innerWidth > 600 ? 480 : window.innerWidth*0.9;
   canvas.height = window.innerHeight > 600 ? 640 : window.innerHeight*0.7;
+  updateLeaderboardHeight();
 });
 
 let puan = 0;
@@ -265,6 +265,16 @@ function updateLeaderboard(currentScore){
     leaderboardEl.innerHTML += `<li>Sen: ${playerAddress} - ${currentScore} (#${playerIndex+1})</li>`;
   }
 }
+
+// Lider tablosu yüksekliğini canvas ile eşitle
+function updateLeaderboardHeight() {
+  const leaderboard = document.getElementById("leaderboard-container");
+  leaderboard.style.height = canvas.height + "px";
+}
+
+// Başta ve resize’de tablo yüksekliğini ayarla
+updateLeaderboardHeight();
+window.addEventListener("resize", updateLeaderboardHeight);
 
 updateLeaderboard(puan);
 </script>

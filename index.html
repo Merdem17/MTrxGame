@@ -12,21 +12,24 @@ body {
   overflow: hidden;
 }
 
+/* Wrapper: oyun alanı ve tablo */
 #main-wrapper {
   display: flex;
   justify-content: center; /* oyun alanı ortalanır */
   align-items: flex-start;
-  gap: 50px; /* canvas ile tablo arası boşluk */
   width: 100%;
+  gap: 50px; /* oyun ve tablo arası boşluk */
   padding: 20px;
 }
 
-#game-container {
+/* Oyun alanı container */
+#game-wrapper {
   display: flex;
   flex-direction: column;
   align-items: center;
 }
 
+/* Başlık */
 #game-title {
   font-size: 32px;
   color: #0f0;
@@ -36,11 +39,13 @@ body {
   text-shadow: 2px 2px 4px #000;
 }
 
+/* Canvas */
 canvas {
   background: black;
   border: 4px solid #555;
 }
 
+/* Lider tablosu */
 #leaderboard-container {
   padding: 10px;
   background: #111;
@@ -49,7 +54,6 @@ canvas {
   width: 200px;
   height: 640px;
   overflow-y: auto;
-  margin-left: auto; /* tablo sağa yaslanır */
 }
 
 #leaderboard-container h2 {
@@ -79,14 +83,14 @@ canvas {
 /* Responsive: mobilde tablo altta */
 @media(max-width: 700px){
   #main-wrapper { flex-direction: column; align-items: center; gap: 20px; padding:0; }
-  #leaderboard-container { width: 90%; height: auto; margin-left: 0; margin-top: 20px; }
+  #leaderboard-container { width: 90%; height: auto; margin-top: 20px; }
 }
 </style>
 </head>
 <body>
 
 <div id="main-wrapper">
-  <div id="game-container">
+  <div id="game-wrapper">
     <h1 id="game-title">MTrxGame</h1>
     <div id="puanDisplay">Puan: <span id="puan">0</span></div>
     <canvas id="gameCanvas"></canvas>
@@ -116,8 +120,8 @@ let lastSpawn = 0;
 let globalRockSpeed = 2;
 let spawnInterval = 1500;
 
-let silverCount = 0; // silver sayısı
-let goldCount = 0;   // gold sayısı
+let silverCount = 0;
+let goldCount = 0;
 
 const puanEl = document.getElementById("puan");
 
@@ -169,29 +173,26 @@ canvas.addEventListener("click",(e)=>{
       if(rock.type==="gold") puan += 50;
       if(rock.type==="red") puan = Math.max(0, Math.floor(puan*0.5));
       rocks.splice(i,1);
-      updateLeaderboard(puan); // Skor değişince tabloyu güncelle
+      updateLeaderboard(puan);
     }
   });
 });
 
 // ------------------- Yeni Taş Düşüş Mantığı -------------------
 function spawnRocksByScore(){
-  spawnRock(); // stone her zaman
+  spawnRock();
 
-  // Her 25 puanda silver
   if(puan > 0 && puan % 25 === 0){
     spawnSilver();
     silverCount++;
   }
 
-  // Her 25 silver -> gold
   if(silverCount >= 25){
     spawnGold();
     silverCount = 0;
     goldCount++;
   }
 
-  // Kırmızı taş olasılığı puana göre
   if(Math.random() < getRedChance(puan)) spawnRed();
 }
 
@@ -202,7 +203,6 @@ function update(){
     lastSpawn = now;
   }
 
-  // Oyun hızı puana göre artıyor
   globalRockSpeed = Math.min(2 + puan/500, 7);
   spawnInterval = Math.max(400, 1500 - puan*0.5);
 
@@ -223,13 +223,11 @@ function loop(){
   requestAnimationFrame(loop);
 }
 
-// Oyun başlat
 loop();
 
 // ------------------- Lider Tablosu -------------------
 const leaderboardEl = document.getElementById("leaderboard");
 
-// Mock veri (TRX adresleri ve skor)
 let leaderboardData = [
   { address: "TAAA111...", score: 0 },
   { address: "TBBB222...", score: 0 },
@@ -243,10 +241,8 @@ let leaderboardData = [
   { address: "TJJJ000...", score: 0 }
 ];
 
-// Oyuncu TRX adresi (mock)
 let playerAddress = "TMERTERDEM...";
 
-// Skoru tabloya ekle ve güncelle
 function updateLeaderboard(currentScore){
   let existing = leaderboardData.find(p => p.address === playerAddress);
   if(existing){
@@ -269,7 +265,6 @@ function updateLeaderboard(currentScore){
   }
 }
 
-// İlk tabloyu başta güncelle
 updateLeaderboard(puan);
 </script>
 

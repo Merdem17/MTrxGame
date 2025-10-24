@@ -10,20 +10,15 @@ body {
   font-family: sans-serif;
   overflow: hidden;
   color: white;
-}
-
-/* Wrapper: oyun alanı ve tablo */
-#main-wrapper {
-  display: flex;
-  justify-content: center; /* oyun ortada */
-  align-items: flex-start;
-  gap: 120px; /* oyun ve tablo arası mesafe */
-  padding-top: 50px;
-  width: 100%;
+  position: relative;
 }
 
 /* Oyun alanı container */
 #game-wrapper {
+  position: absolute;
+  left: 50%;
+  top: 50px;
+  transform: translateX(-50%);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -54,8 +49,11 @@ canvas {
 
 /* Lider tablosu */
 #leaderboard-container {
+  position: absolute;
+  top: 50px;
+  left: calc(50% + 300px); /* oyun alanından sağa kaydır */
   width: 200px;
-  height: 640px; /* masaüstü yüksekliği */
+  height: 640px; /* JS ile canvas yüksekliğine eşitlenecek */
   background: #111;
   border: 2px solid #555;
   border-radius: 10px;
@@ -82,38 +80,32 @@ canvas {
 }
 
 /* Mobil ve küçük ekran uyumu */
-@media(max-height: 600px){
-  #leaderboard-container {
-    height: 70vh; /* ekran yüksekliğinin %70’i */
-  }
-}
-
 @media(max-width: 900px){
-  #main-wrapper {
-    flex-direction: column;
-    align-items: center;
-    gap: 20px;
-  }
   #leaderboard-container {
+    position: static;
     width: 90%;
-    height: auto; /* mobilde otomatik yükseklik */
+    height: auto;
+    margin-top: 20px;
+  }
+  #game-wrapper {
+    position: static;
+    transform: none;
+    margin: 0 auto;
   }
 }
 </style>
 </head>
 <body>
 
-<div id="main-wrapper">
-  <div id="game-wrapper">
-    <h1 id="game-title">MTrxGame</h1>
-    <div id="puanDisplay">Puan: <span id="puan">0</span></div>
-    <canvas id="gameCanvas"></canvas>
-  </div>
+<div id="game-wrapper">
+  <h1 id="game-title">MTrxGame</h1>
+  <div id="puanDisplay">Puan: <span id="puan">0</span></div>
+  <canvas id="gameCanvas"></canvas>
+</div>
 
-  <div id="leaderboard-container">
-    <h2>Lider Tablosu</h2>
-    <ul id="leaderboard"></ul>
-  </div>
+<div id="leaderboard-container">
+  <h2>Lider Tablosu</h2>
+  <ul id="leaderboard"></ul>
 </div>
 
 <script>
@@ -126,6 +118,7 @@ canvas.height = window.innerHeight > 600 ? 640 : window.innerHeight*0.7;
 window.addEventListener("resize", ()=>{
   canvas.width = window.innerWidth > 600 ? 480 : window.innerWidth*0.9;
   canvas.height = window.innerHeight > 600 ? 640 : window.innerHeight*0.7;
+  updateLeaderboardHeight();
 });
 
 let puan = 0;
@@ -278,6 +271,13 @@ function updateLeaderboard(currentScore){
     leaderboardEl.innerHTML += `<li>Sen: ${playerAddress} - ${currentScore} (#${playerIndex+1})</li>`;
   }
 }
+
+// ------------------- Lider tablosu yüksekliği canvas ile eşit -------------------
+function updateLeaderboardHeight() {
+  document.getElementById("leaderboard-container").style.height = canvas.height + "px";
+}
+updateLeaderboardHeight();
+window.addEventListener("resize", updateLeaderboardHeight);
 
 updateLeaderboard(puan);
 </script>

@@ -18,7 +18,7 @@ body {
   display: flex;
   flex-direction: column;
   align-items: center;
-  margin-top: 50px; /* Başlığı ve puan display’i yukarı bırakmak için */
+  margin-top: 50px;
 }
 
 /* Başlık */
@@ -266,7 +266,7 @@ function updateLeaderboardPosition() {
   const lb = document.getElementById("leaderboard-container");
   const canvasRect = canvas.getBoundingClientRect();
   lb.style.top = canvasRect.top + "px";  // canvas üstü ile hizala
-  lb.style.height = canvas.height + "px"; // canvas yüksekliği ile eşitle
+  lb.style.height = canvas.height + "px"; // canvas yüksekliği kadar
 }
 updateLeaderboardPosition();
 window.addEventListener("resize", updateLeaderboardPosition);

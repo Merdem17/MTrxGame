@@ -18,7 +18,7 @@ body {
   display: flex;
   flex-direction: column;
   align-items: center;
-  margin-top: 50px;
+  margin-top: 50px; /* Başlığı ve puan display’i yukarı bırakmak için */
 }
 
 /* Başlık */
@@ -46,10 +46,8 @@ canvas {
 /* Lider tablosu */
 #leaderboard-container {
   position: absolute;
-  top: 50px;
-  left: calc(50% + 280px);
+  left: calc(50% + 280px); /* oyun alanının sağ tarafına kaydır */
   width: 200px;
-  height: 580px; /* Yükseklik biraz düşürüldü */
   background: #111;
   border: 2px solid #555;
   border-radius: 10px;
@@ -109,6 +107,7 @@ canvas.height = window.innerHeight > 600 ? 640 : window.innerHeight*0.7;
 window.addEventListener("resize", ()=>{
   canvas.width = window.innerWidth > 600 ? 480 : window.innerWidth*0.9;
   canvas.height = window.innerHeight > 600 ? 640 : window.innerHeight*0.7;
+  updateLeaderboardPosition(); // tablo pozisyonunu güncelle
 });
 
 let puan = 0;
@@ -261,6 +260,16 @@ function updateLeaderboard(currentScore){
     leaderboardEl.innerHTML += `<li>Sen: ${playerAddress} - ${currentScore} (#${playerIndex+1})</li>`;
   }
 }
+
+// ------------------- Lider tablosu canvas ile hizalı -------------------
+function updateLeaderboardPosition() {
+  const lb = document.getElementById("leaderboard-container");
+  const canvasRect = canvas.getBoundingClientRect();
+  lb.style.top = canvasRect.top + "px";  // canvas üstü ile hizala
+  lb.style.height = canvas.height + "px"; // canvas yüksekliği ile eşitle
+}
+updateLeaderboardPosition();
+window.addEventListener("resize", updateLeaderboardPosition);
 
 updateLeaderboard(puan);
 </script>

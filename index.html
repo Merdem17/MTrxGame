@@ -45,10 +45,11 @@ canvas {
 
 /* Lider tablosu */
 #leaderboard-container {
-  position: absolute;      /* absolute ile sabit konum */
+  position: absolute;
   top: 50px;
-  left: calc(50% + 280px); /* oyun alanının ortasından sağa kaydır */
+  left: calc(50% + 280px);
   width: 200px;
+  height: 580px; /* Yükseklik biraz düşürüldü */
   background: #111;
   border: 2px solid #555;
   border-radius: 10px;
@@ -108,7 +109,6 @@ canvas.height = window.innerHeight > 600 ? 640 : window.innerHeight*0.7;
 window.addEventListener("resize", ()=>{
   canvas.width = window.innerWidth > 600 ? 480 : window.innerWidth*0.9;
   canvas.height = window.innerHeight > 600 ? 640 : window.innerHeight*0.7;
-  updateLeaderboardHeight(); // yükseklik eşitle
 });
 
 let puan = 0;
@@ -261,13 +261,6 @@ function updateLeaderboard(currentScore){
     leaderboardEl.innerHTML += `<li>Sen: ${playerAddress} - ${currentScore} (#${playerIndex+1})</li>`;
   }
 }
-
-// ------------------- Lider tablosu yüksekliği canvas ile eşit -------------------
-function updateLeaderboardHeight() {
-  document.getElementById("leaderboard-container").style.height = canvas.height + "px";
-}
-updateLeaderboardHeight();
-window.addEventListener("resize", updateLeaderboardHeight);
 
 updateLeaderboard(puan);
 </script>
